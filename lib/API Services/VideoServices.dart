@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,9 +46,16 @@ class VideoServices {
             }
           }
       );
-    } catch(error){
-      print(error.toString());
-      throw Exception(error);
+    } on DioException catch(e) {
+      if (e.response != null) {
+        print(e.response?.statusCode);
+        print(e.response?.data);
+        print(e.response?.data.runtimeType);
+      } else {
+        throw Exception(
+            "Unable to connect with Server"
+        );
+      }
     }
   }
 }

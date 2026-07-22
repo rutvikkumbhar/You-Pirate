@@ -1,9 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:you_pirate_app/API%20Services/VideoServices.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -75,16 +75,19 @@ class _HomeState extends State<Home> {
                     Directory dir = await getApplicationDocumentsDirectory();
                     String savePath = "${dir.path}/${videoInfo!['title']}.mp4";
                     debugPrint("FILE PATH: ${savePath}");
-                    await VideoServices.downloadVideo(
+                    VideoServices.downloadVideo(
                         url,
-                        savePath).then((result)=>{
-                    setState(()=>downloadLoading=false),
-                      debugPrint("Media downloaded"),
+                        savePath).then((result) async =>{
+                          debugPrint("Media downloaded"),
+                          debugPrint("Pushing file into Internal Storage"),
+                      await MediaStorePlusServices.pushVideoToInternal(savePath),
+                      setState(()=>downloadLoading=false),
+                      debugPrint("Stored into Internal Storage"),
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Download Completed"))),
                     }).onError((error, stackTrace)=>{
                     setState(()=>downloadLoading=false),
-                      debugPrint("Failed to  downloaded ERROR: ${error.toString()}"),
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to  downloaded"))),
+                      debugPrint("Failed to  download ERROR: ${error.toString()}"),
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to  download"))),
                     });
                     // await dio.download(
                     //     url,

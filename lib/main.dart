@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'Screens/Home.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await MediaStore.ensureInitialized();
+  MediaStore.appFolder = "You Pirate";
   runApp(MyApp());
 }
 
