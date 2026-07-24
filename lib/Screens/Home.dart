@@ -21,16 +21,13 @@ class _HomeState extends State<Home> {
   bool infoLoading = false;
   bool downloadLoading = false;
 
-  String bytesToMb(int bytes){
-    return (bytes/ (1024*1024)).toStringAsFixed(2);
+  String bytesToMb(int bytes) {
+    return (bytes / (1024 * 1024)).toStringAsFixed(2);
   }
 
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Media Ripping App"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text("Media Ripping App"), centerTitle: true),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -43,83 +40,99 @@ class _HomeState extends State<Home> {
               controller: urlController,
             ),
           ),
-          SizedBox(height: 50,),
+          SizedBox(height: 50),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                child: infoLoading? CircularProgressIndicator() : Text("Meta Data"),
-                onPressed: () async{
-                  setState(()=>infoLoading=true);
+                child: infoLoading
+                    ? CircularProgressIndicator()
+                    : Text("Meta Data"),
+                onPressed: () async {
+                  setState(() => infoLoading = true);
                   String url = urlController.text;
                   try {
-                    await VideoServices.getVideoInfo(url).then((result)=>{
-                      setState(()=>infoLoading=false),
-                      videoInfo = result,
-                    }).onError((error, stackTrace){
-                      setState(()=>infoLoading=false);
-                      throw error.toString();
-                    });
-                    setState(()=>{});
-                  } catch(error){
+                    await VideoServices.getVideoInfo(url)
+                        .then(
+                          (result) => {
+                            setState(() => infoLoading = false),
+                            videoInfo = result,
+                          },
+                        )
+                        .onError((error, stackTrace) {
+                          setState(() => infoLoading = false);
+                          throw error.toString();
+                        });
+                    setState(() => {});
+                  } catch (error) {
                     print("ERROR: ${error.toString()}");
                   }
                 },
               ),
               ElevatedButton(
-                  child: downloadLoading?CircularProgressIndicator():Text("Download"),
-                  onPressed: () async {
-                    setState(()=>downloadLoading=true);
-                    String url = urlController.text.trim().toString();
-                    debugPrint("URL: ${url}");
-                    Directory dir = await getApplicationDocumentsDirectory();
-                    String savePath = "${dir.path}/${videoInfo!['title']}.mp4";
-                    debugPrint("FILE PATH: ${savePath}");
-                    VideoServices.downloadVideo(
-                        url,
-                        savePath).then((result) async =>{
+                child: downloadLoading
+                    ? CircularProgressIndicator()
+                    : Text("Download"),
+                onPressed: () async {
+                  setState(() => downloadLoading = true);
+                  String url = urlController.text.trim().toString();
+                  debugPrint("URL: ${url}");
+                  Directory dir = await getApplicationDocumentsDirectory();
+                  String savePath = "${dir.path}/${videoInfo!['title']}.mp4";
+                  debugPrint("FILE PATH: ${savePath}");
+                  VideoServices.downloadVideo(
+                        url: url,
+                        savePath: savePath,
+                        onProgress: (received, total) => {
+                          if (total != -1) {
+                              progress = received / total,
+                              totalBytes = total,
+                              receivedBytes = received,
+                              setState(() => {}),
+                          },
+                        },
+                      )
+                      .then(
+                        (result) async => {
+                          progress=0,
+                          totalBytes=0,
+                          receivedBytes=0,
                           debugPrint("Media downloaded"),
                           debugPrint("Pushing file into Internal Storage"),
-                      await MediaStorePlusServices.pushVideoToInternal(savePath),
-                      setState(()=>downloadLoading=false),
-                      debugPrint("Stored into Internal Storage"),
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Download Completed"))),
-                    }).onError((error, stackTrace)=>{
-                    setState(()=>downloadLoading=false),
-                      debugPrint("Failed to  download ERROR: ${error.toString()}"),
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to  download"))),
-                    });
-                    // await dio.download(
-                    //     url,
-                    //     path+"${videoInfo!['title']}.mp4",
-                    //     onReceiveProgress: (received, total)=>{
-                    //       if(total!=-1){
-                    //         progress = received/total,
-                    //         totalBytes = total,
-                    //         receivedBytes=received,
-                    //         setState(()=>{}),
-                    //       }
-                    //     }).then((data)=>{
-                    //   print("Media downloaded"),
-                    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Download Completed"))),
-                    // }).onError((error, stackTrace)=>{
-                    //   print("Error ${error.toString()}")
-                    // });
-                  }
+                          await MediaStorePlusServices.pushVideoToInternal(
+                            savePath,
+                          ),
+                          setState(() => downloadLoading = false),
+                          debugPrint("Stored into Internal Storage"),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Download Completed")),
+                          ),
+                        },
+                      )
+                      .onError(
+                        (error, stackTrace) => {
+                          setState(() => downloadLoading = false),
+                          debugPrint(
+                            "Failed to  download ERROR: ${error.toString()}",
+                          ),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Failed to  download")),
+                          ),
+                        },
+                      );
+                },
               ),
             ],
           ),
-          SizedBox(height: 30,),
+          SizedBox(height: 30),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Container(
               width: MediaQuery.of(context).size.width,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.red)
-              ),
+              decoration: BoxDecoration(border: Border.all(color: Colors.red)),
               child: Column(
                 children: [
-                  if(progress==0)
+                  if (progress == 0)
                     SizedBox()
                   else
                     Padding(
@@ -132,25 +145,26 @@ class _HomeState extends State<Home> {
                               value: progress,
                             ),
                           ),
-                          SizedBox(width: 10,),
-                          Text("${(progress*100).toStringAsFixed(1)}%")
+                          SizedBox(width: 10),
+                          Text("${(progress * 100).toStringAsFixed(1)}%"),
                         ],
                       ),
                     ),
-                  SizedBox(height: 10,),
-                  if(progress==0)
+                  SizedBox(height: 10),
+                  if (progress == 0)
                     SizedBox()
                   else
-                    Text("${bytesToMb(receivedBytes)}MB / ${bytesToMb(totalBytes)}MB")
+                    Text(
+                      "${bytesToMb(receivedBytes)}MB / ${bytesToMb(totalBytes)}MB",
+                    ),
                 ],
               ),
             ),
           ),
-          SizedBox(height: 10,),
-          if (videoInfo != null)
-            Text(videoInfo!['title'])
+          SizedBox(height: 10),
+          if (videoInfo != null) Text(videoInfo!['title']),
         ],
-      )
+      ),
     );
   }
 }
