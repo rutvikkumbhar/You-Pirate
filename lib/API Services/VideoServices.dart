@@ -33,7 +33,7 @@ class VideoServices {
     required String savePath,
     required void Function(int recieved, int total) onProgress}) async {
     Dio dio = Dio();
-    final endpoint = "$baseUrl/user/video/download";
+    final endpoint = "$baseUrl/user/video/quickdownload";
     try {
       await dio.download(
           endpoint,
@@ -46,6 +46,42 @@ class VideoServices {
               contentType: "application/json"
           ),
           onReceiveProgress: onProgress,
+      );
+    } on DioException catch(e) {
+      if (e.response != null) {
+        print(e.response?.statusCode);
+        print(e.response?.data);
+        print(e.response?.data.runtimeType);
+      } else {
+        throw Exception(
+            "Unable to connect with Server"
+        );
+      }
+    }
+  }
+
+  static Future<void> downloadVideoById({
+    required String url,
+    required String formatId,
+    required String savePath,
+    required void Function(int received, int total) onProgress
+}) async {
+    final endPoint = "${baseUrl}/user/video/qualitydownload";
+    final Dio dio = Dio();
+
+    try {
+      await dio.download(
+        endPoint,
+        savePath,
+        data: {
+          "url":url,
+          "formatId":formatId
+        },
+        options: Options(
+          method: "POST",
+          contentType: "application/json"
+        ),
+        onReceiveProgress: onProgress,
       );
     } on DioException catch(e) {
       if (e.response != null) {
