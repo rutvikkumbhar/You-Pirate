@@ -4,10 +4,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:you_pirate_app/API%20Services/VideoServices.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
-import 'package:you_pirate_app/Services/Error.dart';
+import 'package:you_pirate_app/Services/SnackbarServices.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -24,7 +25,8 @@ class _HomeState extends State<Home> {
   Map<String, dynamic>? videoInfo;
   List<dynamic>? formats;
   bool infoLoading = false;
-  bool downloadLoading = false;
+  bool fetchingVideo = false;
+  bool isVideo = true;
 
   // Temp Data Here
   String tempTitle = "This is the video title which should have to be this long or more than this so i can trim it accordingly";
@@ -46,7 +48,7 @@ class _HomeState extends State<Home> {
           centerTitle: true,
       backgroundColor: Color(0xff111111),),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 13),
         child: ListView(
           children: [
             SizedBox(height: 30,),
@@ -65,7 +67,7 @@ class _HomeState extends State<Home> {
                   icon: Icon(Boxicons.bxs_send, color: Colors.white60,),
                   onPressed: () async {
                     if(urlController.text.isEmpty){
-                      Error().error(context,"Link to dal lavde");
+                      SnackbarServices().error(context,"Link to dal lavde");
                     } else {
                       setState(() => infoLoading = true);
                       try {
@@ -80,21 +82,21 @@ class _HomeState extends State<Home> {
                         });
                       } catch (error) {
                         print("ERROR: ${error.toString()}");
-                        Error().error(context, error.toString());
+                        SnackbarServices().error(context, error.toString());
                       }
                     }
                     },
                 ),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(13),
                     borderSide: BorderSide(color: Color(0xff6D5DF6).withValues(alpha: 0.3))
                 ),
                 enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(13),
                     borderSide: BorderSide(color: Color(0xff6D5DF6).withValues(alpha: 0.3))
                 ),
                 focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(13),
                     borderSide: BorderSide(color: Color(0xff6D5DF6).withValues(alpha: 0.4))
                 ),),
             ),
@@ -105,11 +107,11 @@ class _HomeState extends State<Home> {
             ):SizedBox(),
             SizedBox(height: 15,),
             Container(
-              height: 150,
+              height: 120,
               width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                 color: Color(0xff1B1B1B),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(13),
                 border: Border.all(color: Color(0xff6D5DF6).withValues(alpha: 0.2))
               ),
               child: Padding(
@@ -117,31 +119,56 @@ class _HomeState extends State<Home> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      height: MediaQuery.of(context).size.width,
-                      width: 180,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                         borderRadius: BorderRadius.circular(5),
-                         image: DecorationImage(image: AssetImage("assets/test.webp"),
-                         fit: BoxFit.cover)
-                      ),
+                    Stack(
+                      children: [
+                        Container(
+                          height: MediaQuery.of(context).size.width,
+                          width: 180,
+                          decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(5),
+                              image: DecorationImage(image: AssetImage("assets/test.webp"),
+                                  fit: BoxFit.cover)
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 1,right: 1,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black45,
+                              borderRadius: BorderRadius.circular(5)
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 5),
+                              child: Center(
+                                child: Text("3:23",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      color: Colors.white,
+                                    fontWeight: FontWeight.w600
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
+                      ]
                     ),
-                    SizedBox(width: 10,),
+                    SizedBox(width: 11,),
                     Expanded(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(tempTitle.length>80?"${tempTitle.substring(0,80)}...":tempTitle,
-                            style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 17
+                          Text(tempTitle.length>80?"${tempTitle.substring(0,50)}...":tempTitle,
+                            style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500),),
+                          Text("Channel Name", style: GoogleFonts.poppins(
+                              color: Colors.white70,
+                              fontSize: 13,
                           ),),
-                          Text("Channel Name", style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 16
-                          ),)
                         ],
                       ),
                     )
@@ -149,72 +176,195 @@ class _HomeState extends State<Home> {
                 ),
               ),
             ),
-            SizedBox(height: 50),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  child: infoLoading
-                      ? CircularProgressIndicator()
-                      : Text("Meta Data"),
-                  onPressed: () async {
-
-                  },
+            SizedBox(height: 15,),
+            GestureDetector(
+              onTap: () async {
+                try {
+                  setState(() => fetchingVideo = true);
+                  Directory dir = await getApplicationDocumentsDirectory();
+                  String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
+                  VideoServices.downloadVideo(
+                      url: urlController.text.toString(),
+                      savePath: savePath,
+                      onProgress: (received, total)=>{
+                        if (total != -1) {
+                          fetchingVideo = false,
+                          progress = received / total,
+                          totalBytes = total,
+                          receivedBytes = received,
+                          setState(() => {}),
+                        },
+                      }).then((result) async =>{
+                    // progress,totalBytes,receivedBytes=0,
+                    debugPrint("Media downloaded"),
+                    debugPrint("Pushing file into Internal Storage"),
+                    await MediaStorePlusServices.pushVideoToInternal(
+                      savePath,
+                    ),
+                    debugPrint("Stored into Internal Storage"),
+                    SnackbarServices().success(context, "Download Completed")
+                  });
+                } catch(error) {
+                  SnackbarServices().error(context, error.toString());
+                }
+              },
+              child: Container(
+                height: 75,
+                width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: Color(0xff523CD3),
+                  borderRadius: BorderRadius.circular(13)
                 ),
-                ElevatedButton(
-                  child: downloadLoading
-                      ? CircularProgressIndicator()
-                      : Text("Download"),
-                  onPressed: () async {
-                    setState(() => downloadLoading = true);
-                    String url = urlController.text.trim().toString();
-                    debugPrint("URL: ${url}");
-                    Directory dir = await getApplicationDocumentsDirectory();
-                    String savePath = "${dir.path}/${videoInfo!['title']}.mp4";
-                    debugPrint("FILE PATH: ${savePath}");
-                    VideoServices.downloadVideo(
-                          url: url,
-                          savePath: savePath,
-                          onProgress: (received, total) => {
-                            if (total != -1) {
-                                progress = received / total,
-                                totalBytes = total,
-                                receivedBytes = received,
-                                setState(() => {}),
-                            },
-                          },
-                        ).then((result) async => {
-                            progress=0,
-                            totalBytes=0,
-                            receivedBytes=0,
-                            debugPrint("Media downloaded"),
-                            debugPrint("Pushing file into Internal Storage"),
-                            await MediaStorePlusServices.pushVideoToInternal(
-                              savePath,
-                            ),
-                            setState(() => downloadLoading = false),
-                            debugPrint("Stored into Internal Storage"),
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Download Completed")),
-                            ),
-                          },
-                        )
-                        .onError(
-                          (error, stackTrace) => {
-                            setState(() => downloadLoading = false),
-                            debugPrint(
-                              "Failed to  download ERROR: ${error.toString()}",
-                            ),
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Failed to  download")),
-                            ),
-                          },
-                        );
-                  },
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Boxicons.bxs_bolt, color: Colors.white,size: 18,),
+                          SizedBox(width: 13,),
+                          Text("Quick Download",
+                          style: GoogleFonts.poppins(
+                            fontSize: 19,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600
+                          ),)
+                        ],
+                      ),
+                      Text("Best Quality (Video + Audio)",
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500
+                      ),),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 10,),
+            fetchingVideo?Lottie.asset("assets/Animations/loading.json",height: 50,width: 50):SizedBox(),
+            SizedBox(height: 10),
+            Container(
+              height: 55, width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                color: Color(0xff1B1B1B),
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: Color(0xff6D5DF6).withValues(alpha: 0.2))
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: ()=>setState(()=>isVideo=true),
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 5,top: 5,bottom: 5),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            color: isVideo?Color(0xff503bd1):Colors.transparent,
+                            borderRadius: BorderRadius.circular(5)
+                          ),
+                          child: Center(child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.videocam_rounded,size: 19,color: isVideo?Colors.white:Colors.white70,),
+                              SizedBox(width: 10,),
+                              Text("Video",
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: isVideo?Colors.white:Colors.white70,
+                                fontWeight: FontWeight.w500
+                              ),),
+                            ],
+                          )),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: ()=>setState(()=>isVideo=false),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 5,bottom: 5,right: 5),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                              color: isVideo?Colors.transparent:Color(0xff503bd1),
+                              borderRadius: BorderRadius.circular(5)
+                          ),
+                          child: Center(child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              FaIcon(FontAwesomeIcons.itunesNote,size: 14,color: isVideo?Colors.white70:Colors.white,),
+                              SizedBox(width: 10,),
+                              Text("Audio",
+                                style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: isVideo?Colors.white70:Colors.white,
+                                    fontWeight: FontWeight.w500
+                                ),),
+                            ],
+                          )),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10,),
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 200),
+              child: isVideo? Container(
+                height: 50,width: MediaQuery.of(context).size.width,
+                decoration: BoxDecoration(
+                  color: Color(0xff1B1B1B),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 90,
+                            decoration: BoxDecoration(
+                              color: Color(0xff3B2C88),
+                              borderRadius: BorderRadius.circular(5)
+                            ),
+                            child: Center(
+                              child: Text("1080p",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Color(0xff9F8DF0),
+                                  fontWeight: FontWeight.w500
+                                ),),),
+                          ),
+                          Text("MP4", style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500
+                          ),)
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ) : Row(
+                children: [
+
+                ],
+              ),
+            ),
+            SizedBox(height: 20,),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
