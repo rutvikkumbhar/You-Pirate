@@ -27,6 +27,7 @@ class _HomeState extends State<Home> {
   bool infoLoading = false;
   bool isInfoAvailable = false;
   bool fetchingVideo = false;
+  bool fetchInfo = false;
   bool isVideo = true;
   bool isDownloading = false;
   String extension = "";
@@ -103,24 +104,29 @@ class _HomeState extends State<Home> {
                   icon: Icon(Boxicons.bxs_send, color: Colors.white60,),
                   onPressed: () async {
                     if(urlController.text.isEmpty){
-                      SnackbarServices().error(context,"Link to dal lavde");
+                      SnackbarServices().error(context,"Enter video link");
+                    } else if(fetchInfo){
+                      SnackbarServices().warning(context, "Fetching video information");
                     } else {
                       setState(() => infoLoading = true);
+                      fetchInfo = true;
                       try {
                         VideoServices.getVideoInfo(urlController.text).then((result) => {
+                          fetchInfo = false,
                           isInfoAvailable = true,
                           setState(()=>infoLoading=false),
                           videoInfo = result,
                           formats = videoInfo?['formats'],
                         }
-                        ).onError((error, stackTrace) {
-                          isInfoAvailable = false;
-                          setState(() => infoLoading = false);
-                          throw error.toString();
+                        ).onError((error, stackTrace) =>{
+                          fetchInfo = false,
+                          isInfoAvailable = false,
+                          setState(() => infoLoading = false),
+                          SnackbarServices().error(context, error.toString()),
                         });
                       } catch (error) {
+                        fetchInfo = false;
                         isInfoAvailable = false;
-                        print("ERROR: ${error.toString()}");
                         SnackbarServices().error(context, error.toString());
                       }
                     }
@@ -182,7 +188,7 @@ class _HomeState extends State<Home> {
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 5),
                                       child: Center(
-                                        child: Text("${videoInfo?['duration_string']}",
+                                        child: Text("${videoInfo?['duration_string'] ?? "NA"}",
                                           style: GoogleFonts.poppins(
                                               fontSize: 13,
                                               color: Colors.white,
@@ -393,7 +399,16 @@ class _HomeState extends State<Home> {
                               downloadSpeed = 0,
                               extension = "",
                               quality = "",
-                            remainingSeconds = 0,
+                              remainingSeconds = 0,
+                              displayedSpeed = 0,
+                            }).onError((error, stackTrace)=>{
+                              setState(()=>isDownloading = false),
+                              SnackbarServices().error(context, error.toString()),
+                              extension = "",
+                              quality = "",
+                              previousReceived = 0,
+                              downloadSpeed = 0,
+                              remainingSeconds = 0,
                               displayedSpeed = 0,
                             });
                           } catch(error) {
@@ -533,7 +548,7 @@ class _HomeState extends State<Home> {
                           final data = formats?[index] as Map<String, dynamic>?;
                           final size = data?['filesize'];
 
-                          return data?['ext']=="mp4"? Padding(
+                          return (data?['ext']=="mp4" && ((data?['vbr'] ?? 0.0) as num).toInt()>0)? Padding(
                             padding: const EdgeInsets.only(bottom: 5),
                             child: Container(
                               height: 50,width: MediaQuery.of(context).size.width,
@@ -559,7 +574,7 @@ class _HomeState extends State<Home> {
                                               borderRadius: BorderRadius.circular(5)
                                           ),
                                           child: Center(
-                                            child: Text("${data?['format_note']}",
+                                            child: Text("${data?['format_note'] ?? "NA"}",
                                               style: GoogleFonts.poppins(
                                                   fontSize: 13,
                                                   color: Color(0xff9F8DF0),
@@ -580,7 +595,7 @@ class _HomeState extends State<Home> {
                                               fontWeight: FontWeight.w500
                                           ),),
                                         ),
-                                        Text("${data?['fps']} FPS", style: GoogleFonts.poppins(
+                                        Text("${data?['fps'] ?? "NA"} FPS", style: GoogleFonts.poppins(
                                             fontSize: 13,
                                             color: Color(0xffB8B8BD),
                                             fontWeight: FontWeight.w500
@@ -674,11 +689,19 @@ class _HomeState extends State<Home> {
                                               quality = "",
                                               previousReceived = 0,
                                               downloadSpeed = 0,
-                                            remainingSeconds = 0,
+                                              remainingSeconds = 0,
+                                              displayedSpeed = 0,
+                                            }).onError((error, stackTrace)=>{
+                                              setState(()=>isDownloading = false),
+                                              SnackbarServices().error(context, error.toString()),
+                                              extension = "",
+                                              quality = "",
+                                              previousReceived = 0,
+                                              downloadSpeed = 0,
+                                              remainingSeconds = 0,
                                               displayedSpeed = 0,
                                             });
                                           } catch(error) {
-                                            print("ERROR: ${error.toString()}");
                                             SnackbarServices().error(context, error.toString());
                                             setState(()=>isDownloading = false);
                                             extension = "";

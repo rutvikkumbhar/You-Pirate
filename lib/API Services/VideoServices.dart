@@ -10,21 +10,25 @@ class VideoServices {
 
   static Future<Map<String, dynamic>> getVideoInfo(String url) async {
     final uri = Uri.parse("$baseUrl/user/video/info");
-    final response = await http.post(
-      uri,
-      headers: {
-        "Content-Type" : "application/json"
-      },
-      body: jsonEncode({
-        "url": url,
-      })
-    );
-    if(response.statusCode==200){
-      return jsonDecode(response.body);
-    } else if(response.statusCode==400){
-      throw Exception(response.body);
-    } else {
-      throw Exception(response.body);
+    try {
+      final response = await http.post(
+          uri,
+          headers: {
+            "Content-Type" : "application/json"
+          },
+          body: jsonEncode({
+            "url": url,
+          })
+      );
+      if(response.statusCode==200){
+        return jsonDecode(response.body);
+      } else if(response.statusCode==400){
+        throw Exception(response.body);
+      } else {
+        throw Exception(response.body);
+      }
+    } catch(error) {
+      throw "Unable to connect with Server";
     }
   }
 
@@ -53,9 +57,7 @@ class VideoServices {
         print(e.response?.data);
         print(e.response?.data.runtimeType);
       } else {
-        throw Exception(
-            "Unable to connect with Server"
-        );
+        throw "Unable to connect with Server";
       }
     }
   }
@@ -89,9 +91,7 @@ class VideoServices {
         print(e.response?.data);
         print(e.response?.data.runtimeType);
       } else {
-        throw Exception(
-            "Unable to connect with Server"
-        );
+        throw "Unable to connect with Server";
       }
     }
   }
