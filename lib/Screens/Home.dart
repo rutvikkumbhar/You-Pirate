@@ -369,14 +369,8 @@ class _HomeState extends State<Home> {
                                     final now = DateTime.now();
                                     final elapsed = now.difference(previousTime).inMilliseconds / 1000;
                                     if (elapsed >= 1000) {
-                                      final currentSpeed =
-                                          (received - previousReceived) /
-                                              (elapsed / 1000);
-
-                                      displayedSpeed =
-                                          displayedSpeed * 0.8 +
-                                              currentSpeed * 0.2;
-
+                                      final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                                      displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
                                       previousReceived = received;
                                       previousTime = now;
                                     }
@@ -659,14 +653,8 @@ class _HomeState extends State<Home> {
                                                   final now = DateTime.now();
                                                   final elapsed = now.difference(previousTime).inMilliseconds / 1000;
                                                   if (elapsed >= 1000) {
-                                                    final currentSpeed =
-                                                        (received - previousReceived) /
-                                                            (elapsed / 1000);
-
-                                                    displayedSpeed =
-                                                        displayedSpeed * 0.8 +
-                                                            currentSpeed * 0.2;
-
+                                                    final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                                                    displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
                                                     previousReceived = received;
                                                     previousTime = now;
                                                   }
@@ -722,9 +710,126 @@ class _HomeState extends State<Home> {
                 ],
               )
             else
-              Padding(
-                padding: const EdgeInsets.only(top: 50),
-                child: Lottie.asset("assets/Animations/chill_guy.json",height: 180,width: 180),
+              Column(
+                children: [
+                  Lottie.asset("assets/Animations/chill_guy.json",height: 200),
+                  Text("Paste a video link",style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600
+                  ),),
+                  SizedBox(height: 30,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                     Container(
+                       height: 110,
+                       width: 120,
+                       decoration: BoxDecoration(
+                         color: Color(0xff1B1B1B),
+                         borderRadius: BorderRadius.circular(13)
+                       ),
+                       child: Padding(
+                         padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 10),
+                         child: Column(
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           crossAxisAlignment: CrossAxisAlignment.center,
+                           children: [
+                             Container(
+                               decoration: BoxDecoration(
+                                 shape: BoxShape.circle,
+                                 color: Color(0xff503bd1).withValues(alpha: 0.6),
+                               ),
+                               child: Padding(
+                                 padding: const EdgeInsets.all(7),
+                                 child: Center(
+                                   child: Icon(Boxicons.bxs_bolt,color: Colors.white,size: 22,),
+                                 ),
+                               ),
+                             ),
+                             Text("Fast Downloads", style: GoogleFonts.poppins(
+                               fontSize: 13,
+                               color: Colors.white,
+                               fontWeight: FontWeight.w500,
+                             ),
+                             textAlign: TextAlign.center,)
+                           ],
+                         ),
+                       ),
+                     ),
+                      Container(
+                        height: 110,
+                        width: 120,
+                        decoration: BoxDecoration(
+                            color: Color(0xff1B1B1B),
+                            borderRadius: BorderRadius.circular(13)
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 5),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xff503bd1).withValues(alpha: 0.6),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(7),
+                                  child: Center(
+                                    child: Icon(Boxicons.bxs_film,color: Colors.white,size: 22,),
+                                  ),
+                                ),
+                              ),
+                              Text("Multiple Video Qualities", style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                                textAlign: TextAlign.center,)
+                            ],
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 110,
+                        width: 120,
+                        decoration: BoxDecoration(
+                            color: Color(0xff1B1B1B),
+                            borderRadius: BorderRadius.circular(13)
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 5),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xff503bd1).withValues(alpha: 0.6),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(7),
+                                  child: Center(
+                                    child: Icon(Boxicons.bxs_music,color: Colors.white,size: 22,),
+                                  ),
+                                ),
+                              ),
+                              Text("Audio Downloads", style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                                textAlign: TextAlign.center,)
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               )
           ],
         ),

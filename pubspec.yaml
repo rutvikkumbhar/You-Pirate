@@ -72,6 +72,7 @@ flutter:
   assets:
     - .env
     - assets/test.webp
+    - assets/pirate_ship.png
     - assets/Animations/loading.json
     - assets/Animations/chill_guy.json
   #   - images/a_dot_burr.jpeg
