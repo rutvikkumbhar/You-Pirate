@@ -62,13 +62,14 @@ class VideoServices {
     }
   }
 
-  static Future<void> downloadVideoById({
+  static Future<void> downloadFileById({
     required String url,
     required String formatId,
     required String savePath,
+    required bool isVideo,
     required void Function(int received, int total) onProgress
 }) async {
-    final endPoint = "${baseUrl}/user/video/qualitydownload";
+    final endPoint = isVideo ? "${baseUrl}/user/video/qualitydownload" : "${baseUrl}/user/audio/qualitydownload" ;
     final Dio dio = Dio();
 
     try {
@@ -76,8 +77,8 @@ class VideoServices {
         endPoint,
         savePath,
         data: {
-          "url":url,
-          "formatId":formatId
+          "url": url,
+          "formatId": formatId
         },
         options: Options(
           method: "POST",

@@ -654,10 +654,11 @@ class _HomeState extends State<Home> {
                                             setState(() => fetchingVideo = true);
                                             Directory dir = await getApplicationDocumentsDirectory();
                                             String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
-                                            VideoServices.downloadVideoById(
+                                            VideoServices.downloadFileById(
                                                 url: urlController.text.toString(),
                                                 formatId: data?['format_id'],
                                                 savePath: savePath,
+                                                isVideo: isVideo,
                                                 onProgress: (received, total) {
                                                   setState(() => fetchingVideo = false);
                                                   // Progress bar
@@ -724,11 +725,191 @@ class _HomeState extends State<Home> {
                         },
                       ),
                     )
-                        : Row(
-                      children: [
-                        // Audio card ui design here
-                      ],
-                    ),
+                        : Container(
+                      height: 350, width: MediaQuery.of(context).size.width,
+                      child: ListView.builder(
+                        itemCount: formats?.length,
+                        itemBuilder: (context,index){
+                          final data = formats?[index] as Map<String, dynamic>?;
+                          final size = data?['filesize'];
+
+                          return (data?['ext']=="m4a")? Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: Container(
+                              height: 50,width: MediaQuery.of(context).size.width,
+                              decoration: BoxDecoration(
+                                  color: Color(0xff1B1B1B),
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Container(
+                                          width: 60,
+                                          decoration: BoxDecoration(
+                                              color: Color(0xff3B2C88),
+                                              borderRadius: BorderRadius.circular(5)
+                                          ),
+                                          child: Center(
+                                            child: Text("${data?['format_note'] ?? "NA"}",
+                                              style: GoogleFonts.poppins(
+                                                  fontSize: 13,
+                                                  color: Color(0xff9F8DF0),
+                                                  fontWeight: FontWeight.w500
+                                              ),),),
+                                        ),
+                                        SizedBox(width: 10,),
+                                        Text("${data?['ext']}", style: GoogleFonts.poppins(
+                                            fontSize: 13,
+                                            color: Color(0xffB8B8BD),
+                                            fontWeight: FontWeight.w500
+                                        ),),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                                          child: Text("•",style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: Color(0xffB8B8BD),
+                                              fontWeight: FontWeight.w500
+                                          ),),
+                                        ),
+                                        Text("${data?['fps'] ?? "NA"} FPS", style: GoogleFonts.poppins(
+                                            fontSize: 13,
+                                            color: Color(0xffB8B8BD),
+                                            fontWeight: FontWeight.w500
+                                        ),),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                                          child: Text("•",style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: Color(0xffB8B8BD),
+                                              fontWeight: FontWeight.w500
+                                          ),),
+                                        ),
+                                        Text("${((data?['abr'] ?? 0.0) as num).toInt()}k", style: GoogleFonts.poppins(
+                                            fontSize: 13,
+                                            color: Color(0xffB8B8BD),
+                                            fontWeight: FontWeight.w500
+                                        ),),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                                          child: Text("•",style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: Color(0xffB8B8BD),
+                                              fontWeight: FontWeight.w500
+                                          ),),
+                                        ),
+                                        Text("${size == null ? 'Unknown' : '${double.parse(bytesToMb(size))>1024?(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)+" GB":bytesToMb(size)+" MB"}'}",
+                                          style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: Color(0xffB8B8BD),
+                                              fontWeight: FontWeight.w500
+                                          ),),
+                                      ],
+                                    ),
+                                    GestureDetector(
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 5),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Colors.white10
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(7),
+                                            child: Center(child: Icon(Boxicons.bx_arrow_to_bottom,size: 21,color: Colors.white,)),
+                                          ),
+                                        ),
+                                      ),
+                                      onTap: () async {
+                                        if(!isDownloading) {
+                                          try {
+                                            isDownloading = true;
+                                            totalBytes= 0;
+                                            progress = 0;
+                                            extension = "m4a";
+                                            quality = "${data?['format_note']}";
+                                            setState(() => fetchingVideo = true);
+                                            Directory dir = await getApplicationDocumentsDirectory();
+                                            String savePath = "${dir.path}/${videoInfo?['title']}.m4a";
+                                            VideoServices.downloadFileById(
+                                                url: urlController.text.toString(),
+                                                formatId: data?['format_id'],
+                                                savePath: savePath,
+                                                isVideo: isVideo,
+                                                onProgress: (received, total) {
+                                                  setState(() => fetchingVideo = false);
+                                                  // Progress bar
+                                                  receivedBytes = received;
+                                                  totalBytes = total;
+                                                  progress = receivedBytes / totalBytes;
+                                                  // Download Speed
+                                                  final now = DateTime.now();
+                                                  final elapsed = now.difference(previousTime).inMilliseconds / 1000;
+                                                  if (elapsed >= 1000) {
+                                                    final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                                                    displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
+                                                    previousReceived = received;
+                                                    previousTime = now;
+                                                  }
+                                                  // Remaining Time
+                                                  final remainingBytes = total - received;
+                                                  remainingSeconds = remainingBytes / displayedSpeed;
+                                                  setState(()=>{});
+                                                }).then((result) async =>{
+                                              debugPrint("Media downloaded"),
+                                              debugPrint("Pushing file into Internal Storage"),
+                                              await MediaStorePlusServices.pushAudioToInternal(savePath),
+                                              setState(()=>isDownloading = false),
+                                              progress,totalBytes,receivedBytes=0,
+                                              print("Download Completed"),
+                                              SnackbarServices().success(context, "Download Completed"),
+                                              extension = "",
+                                              quality = "",
+                                              previousReceived = 0,
+                                              downloadSpeed = 0,
+                                              remainingSeconds = 0,
+                                              displayedSpeed = 0,
+                                            }).onError((error, stackTrace)=>{
+                                              setState(()=>isDownloading = false),
+                                              SnackbarServices().error(context, error.toString()),
+                                              extension = "",
+                                              quality = "",
+                                              previousReceived = 0,
+                                              downloadSpeed = 0,
+                                              remainingSeconds = 0,
+                                              displayedSpeed = 0,
+                                            });
+                                          } catch(error) {
+                                            SnackbarServices().error(context, error.toString());
+                                            setState(()=>isDownloading = false);
+                                            extension = "";
+                                            quality = "";
+                                            previousReceived = 0;
+                                            downloadSpeed = 0;
+                                            remainingSeconds = 0;
+                                            displayedSpeed = 0;
+                                          }
+                                        } else {
+                                          SnackbarServices().warning(context, "Download is in process");
+                                        }
+                                      },
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ) : SizedBox();
+                        },
+                      ),
+                    )
                   ),
                 ],
               )
