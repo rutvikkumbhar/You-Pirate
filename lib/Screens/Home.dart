@@ -26,7 +26,7 @@ class _HomeState extends State<Home> {
   List<dynamic>? formats;
   bool infoLoading = false;
   bool isInfoAvailable = false;
-  bool fetchingVideo = false;
+  bool fetchingStream = false;
   bool fetchInfo = false;
   bool isVideo = true;
   bool isDownloading = false;
@@ -358,7 +358,7 @@ class _HomeState extends State<Home> {
                             quality = "Best";
                             progress = 0;
                             totalBytes= 0;
-                            setState(() => fetchingVideo = true);
+                            setState(() => fetchingStream = true);
                             Directory dir = await getApplicationDocumentsDirectory();
                             String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
                             VideoServices.downloadVideo(
@@ -366,7 +366,7 @@ class _HomeState extends State<Home> {
                                 savePath: savePath,
                                 onProgress: (received, total) {
                                   if (total != -1) {
-                                    setState(() => fetchingVideo = false);
+                                    setState(() => fetchingStream = false);
                                     // Progress bar
                                     progress = received / total;
                                     totalBytes = total;
@@ -463,7 +463,7 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   SizedBox(height: 10,),
-                  fetchingVideo?Lottie.asset("assets/Animations/loading.json",height: 50,width: 50):SizedBox(),
+                  fetchingStream?Lottie.asset("assets/Animations/loading.json",height: 50,width: 50):SizedBox(),
                   SizedBox(height: 10),
                   Container(
                     height: 55, width: MediaQuery.of(context).size.width,
@@ -540,376 +540,8 @@ class _HomeState extends State<Home> {
                     switchOutCurve: Curves.easeOut,
                     switchInCurve: Curves.easeIn,
                     child: isVideo ?
-                    Container(
-                      height: 350, width: MediaQuery.of(context).size.width,
-                      child: ListView.builder(
-                        itemCount: formats?.length,
-                        itemBuilder: (context,index){
-                          final data = formats?[index] as Map<String, dynamic>?;
-                          final size = data?['filesize'];
-
-                          return (data?['ext']=="mp4" && ((data?['vbr'] ?? 0.0) as num).toInt()>0)? Padding(
-                            padding: const EdgeInsets.only(bottom: 5),
-                            child: Container(
-                              height: 50,width: MediaQuery.of(context).size.width,
-                              decoration: BoxDecoration(
-                                  color: Color(0xff1B1B1B),
-                                  borderRadius: BorderRadius.circular(13),
-                                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          width: 60,
-                                          decoration: BoxDecoration(
-                                              color: Color(0xff3B2C88),
-                                              borderRadius: BorderRadius.circular(5)
-                                          ),
-                                          child: Center(
-                                            child: Text("${data?['format_note'] ?? "NA"}",
-                                              style: GoogleFonts.poppins(
-                                                  fontSize: 13,
-                                                  color: Color(0xff9F8DF0),
-                                                  fontWeight: FontWeight.w500
-                                              ),),),
-                                        ),
-                                        SizedBox(width: 10,),
-                                        Text("${data?['ext']}", style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            color: Color(0xffB8B8BD),
-                                            fontWeight: FontWeight.w500
-                                        ),),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Text("•",style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                        Text("${data?['fps'] ?? "NA"} FPS", style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            color: Color(0xffB8B8BD),
-                                            fontWeight: FontWeight.w500
-                                        ),),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Text("•",style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                        Text("${((data?['vbr'] ?? 0.0) as num).toInt()}k", style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            color: Color(0xffB8B8BD),
-                                            fontWeight: FontWeight.w500
-                                        ),),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Text("•",style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                        Text("${size == null ? 'Unknown' : '${double.parse(bytesToMb(size))>1024?(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)+" GB":bytesToMb(size)+" MB"}'}",
-                                          style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                      ],
-                                    ),
-                                    GestureDetector(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(right: 5),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white10
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(7),
-                                            child: Center(child: Icon(Boxicons.bx_arrow_to_bottom,size: 21,color: Colors.white,)),
-                                          ),
-                                        ),
-                                      ),
-                                      onTap: () async {
-                                        if(!isDownloading) {
-                                          try {
-                                            isDownloading = true;
-                                            totalBytes= 0;
-                                            progress = 0;
-                                            extension = "mp4";
-                                            quality = "${data?['format_note']}";
-                                            setState(() => fetchingVideo = true);
-                                            Directory dir = await getApplicationDocumentsDirectory();
-                                            String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
-                                            VideoServices.downloadFileById(
-                                                url: urlController.text.toString(),
-                                                formatId: data?['format_id'],
-                                                savePath: savePath,
-                                                isVideo: isVideo,
-                                                onProgress: (received, total) {
-                                                  setState(() => fetchingVideo = false);
-                                                  // Progress bar
-                                                  receivedBytes = received;
-                                                  totalBytes = total;
-                                                  progress = receivedBytes / totalBytes;
-                                                  // Download Speed
-                                                  final now = DateTime.now();
-                                                  final elapsed = now.difference(previousTime).inMilliseconds / 1000;
-                                                  if (elapsed >= 1000) {
-                                                    final currentSpeed = (received - previousReceived) / (elapsed / 1000);
-                                                    displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
-                                                    previousReceived = received;
-                                                    previousTime = now;
-                                                  }
-                                                  // Remaining Time
-                                                  final remainingBytes = total - received;
-                                                  remainingSeconds = remainingBytes / displayedSpeed;
-                                                  setState(()=>{});
-                                                }).then((result) async =>{
-                                              debugPrint("Media downloaded"),
-                                              debugPrint("Pushing file into Internal Storage"),
-                                              await MediaStorePlusServices.pushVideoToInternal(savePath),
-                                              setState(()=>isDownloading = false),
-                                              progress,totalBytes,receivedBytes=0,
-                                              print("Download Completed"),
-                                              SnackbarServices().success(context, "Download Completed"),
-                                              extension = "",
-                                              quality = "",
-                                              previousReceived = 0,
-                                              downloadSpeed = 0,
-                                              remainingSeconds = 0,
-                                              displayedSpeed = 0,
-                                            }).onError((error, stackTrace)=>{
-                                              setState(()=>isDownloading = false),
-                                              SnackbarServices().error(context, error.toString()),
-                                              extension = "",
-                                              quality = "",
-                                              previousReceived = 0,
-                                              downloadSpeed = 0,
-                                              remainingSeconds = 0,
-                                              displayedSpeed = 0,
-                                            });
-                                          } catch(error) {
-                                            SnackbarServices().error(context, error.toString());
-                                            setState(()=>isDownloading = false);
-                                            extension = "";
-                                            quality = "";
-                                            previousReceived = 0;
-                                            downloadSpeed = 0;
-                                            remainingSeconds = 0;
-                                            displayedSpeed = 0;
-                                          }
-                                        } else {
-                                          SnackbarServices().warning(context, "Download is in process");
-                                        }
-                                      },
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ) : SizedBox();
-                        },
-                      ),
-                    )
-                        : Container(
-                      height: 350, width: MediaQuery.of(context).size.width,
-                      child: ListView.builder(
-                        itemCount: formats?.length,
-                        itemBuilder: (context,index){
-                          final data = formats?[index] as Map<String, dynamic>?;
-                          final size = data?['filesize'];
-
-                          return (data?['ext']=="m4a")? Padding(
-                            padding: const EdgeInsets.only(bottom: 5),
-                            child: Container(
-                              height: 50,width: MediaQuery.of(context).size.width,
-                              decoration: BoxDecoration(
-                                  color: Color(0xff1B1B1B),
-                                  borderRadius: BorderRadius.circular(13),
-                                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Container(
-                                          width: 60,
-                                          decoration: BoxDecoration(
-                                              color: Color(0xff3B2C88),
-                                              borderRadius: BorderRadius.circular(5)
-                                          ),
-                                          child: Center(
-                                            child: Text("${data?['format_note'] ?? "NA"}",
-                                              style: GoogleFonts.poppins(
-                                                  fontSize: 13,
-                                                  color: Color(0xff9F8DF0),
-                                                  fontWeight: FontWeight.w500
-                                              ),),),
-                                        ),
-                                        SizedBox(width: 10,),
-                                        Text("${data?['ext']}", style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            color: Color(0xffB8B8BD),
-                                            fontWeight: FontWeight.w500
-                                        ),),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Text("•",style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                        Text("${data?['fps'] ?? "NA"} FPS", style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            color: Color(0xffB8B8BD),
-                                            fontWeight: FontWeight.w500
-                                        ),),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Text("•",style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                        Text("${((data?['abr'] ?? 0.0) as num).toInt()}k", style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            color: Color(0xffB8B8BD),
-                                            fontWeight: FontWeight.w500
-                                        ),),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 7),
-                                          child: Text("•",style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                        Text("${size == null ? 'Unknown' : '${double.parse(bytesToMb(size))>1024?(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)+" GB":bytesToMb(size)+" MB"}'}",
-                                          style: GoogleFonts.poppins(
-                                              fontSize: 13,
-                                              color: Color(0xffB8B8BD),
-                                              fontWeight: FontWeight.w500
-                                          ),),
-                                      ],
-                                    ),
-                                    GestureDetector(
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(right: 5),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: Colors.white10
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(7),
-                                            child: Center(child: Icon(Boxicons.bx_arrow_to_bottom,size: 21,color: Colors.white,)),
-                                          ),
-                                        ),
-                                      ),
-                                      onTap: () async {
-                                        if(!isDownloading) {
-                                          try {
-                                            isDownloading = true;
-                                            totalBytes= 0;
-                                            progress = 0;
-                                            extension = "m4a";
-                                            quality = "${data?['format_note']}";
-                                            setState(() => fetchingVideo = true);
-                                            Directory dir = await getApplicationDocumentsDirectory();
-                                            String savePath = "${dir.path}/${videoInfo?['title']}.m4a";
-                                            VideoServices.downloadFileById(
-                                                url: urlController.text.toString(),
-                                                formatId: data?['format_id'],
-                                                savePath: savePath,
-                                                isVideo: isVideo,
-                                                onProgress: (received, total) {
-                                                  setState(() => fetchingVideo = false);
-                                                  // Progress bar
-                                                  receivedBytes = received;
-                                                  totalBytes = total;
-                                                  progress = receivedBytes / totalBytes;
-                                                  // Download Speed
-                                                  final now = DateTime.now();
-                                                  final elapsed = now.difference(previousTime).inMilliseconds / 1000;
-                                                  if (elapsed >= 1000) {
-                                                    final currentSpeed = (received - previousReceived) / (elapsed / 1000);
-                                                    displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
-                                                    previousReceived = received;
-                                                    previousTime = now;
-                                                  }
-                                                  // Remaining Time
-                                                  final remainingBytes = total - received;
-                                                  remainingSeconds = remainingBytes / displayedSpeed;
-                                                  setState(()=>{});
-                                                }).then((result) async =>{
-                                              debugPrint("Media downloaded"),
-                                              debugPrint("Pushing file into Internal Storage"),
-                                              await MediaStorePlusServices.pushAudioToInternal(savePath),
-                                              setState(()=>isDownloading = false),
-                                              progress,totalBytes,receivedBytes=0,
-                                              print("Download Completed"),
-                                              SnackbarServices().success(context, "Download Completed"),
-                                              extension = "",
-                                              quality = "",
-                                              previousReceived = 0,
-                                              downloadSpeed = 0,
-                                              remainingSeconds = 0,
-                                              displayedSpeed = 0,
-                                            }).onError((error, stackTrace)=>{
-                                              setState(()=>isDownloading = false),
-                                              SnackbarServices().error(context, error.toString()),
-                                              extension = "",
-                                              quality = "",
-                                              previousReceived = 0,
-                                              downloadSpeed = 0,
-                                              remainingSeconds = 0,
-                                              displayedSpeed = 0,
-                                            });
-                                          } catch(error) {
-                                            SnackbarServices().error(context, error.toString());
-                                            setState(()=>isDownloading = false);
-                                            extension = "";
-                                            quality = "";
-                                            previousReceived = 0;
-                                            downloadSpeed = 0;
-                                            remainingSeconds = 0;
-                                            displayedSpeed = 0;
-                                          }
-                                        } else {
-                                          SnackbarServices().warning(context, "Download is in process");
-                                        }
-                                      },
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ) : SizedBox();
-                        },
-                      ),
-                    )
+                    VideoAudioQualityCard(isVideo: isVideo) :
+                    VideoAudioQualityCard(isVideo: isVideo)
                   ),
                 ],
               )
@@ -1037,6 +669,223 @@ class _HomeState extends State<Home> {
               )
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> downloadFileById({
+    required String url,
+    required String formatID,
+    required bool isVideo,
+    required String quality
+  }) async {
+    if(!isDownloading) {
+      try {
+        isDownloading = true;
+        totalBytes= 0;
+        progress = 0;
+        extension = isVideo ? "mp4" : "m4a";
+        this.quality = quality;
+        setState(() => fetchingStream = true);
+        Directory dir = await getApplicationDocumentsDirectory();
+        String savePath = "${dir.path}/${videoInfo?['title']}.${extension}";
+        // if(isVideo)
+        //   savePath = "${dir.path}/${videoInfo?['title']}.${exe}";
+        // else
+        //   savePath = "${dir.path}/${videoInfo?['title']}.m4a";
+        // savePath = "${dir.path}/${videoInfo?['title']}.mp4";
+        VideoServices.downloadFileById(
+            url: url,
+            formatId: formatID,
+            savePath: savePath,
+            isVideo: isVideo,
+            onProgress: (received, total) {
+              setState(() => fetchingStream = false);
+              // Progress bar
+              receivedBytes = received;
+              totalBytes = total;
+              progress = receivedBytes / totalBytes;
+              // Download Speed
+              final now = DateTime.now();
+              final elapsed = now.difference(previousTime).inMilliseconds / 1000;
+              if (elapsed >= 1000) {
+                final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
+                previousReceived = received;
+                previousTime = now;
+              }
+              // Remaining Time
+              final remainingBytes = total - received;
+              remainingSeconds = remainingBytes / displayedSpeed;
+              setState(()=>{});
+            }).then((result) async =>{
+          debugPrint("Media downloaded"),
+          debugPrint("Pushing file into Internal Storage"),
+          // await MediaStorePlusServices.pushVideoToInternal(savePath),
+          if(isVideo)
+            await MediaStorePlusServices.pushVideoToInternal(savePath)
+          else
+            await MediaStorePlusServices.pushAudioToInternal(savePath),
+
+          setState(()=>isDownloading = false),
+          progress,totalBytes,receivedBytes=0,
+          print("Download Completed"),
+          SnackbarServices().success(context, "Download Completed"),
+          extension = "",
+          quality = "",
+          previousReceived = 0,
+          downloadSpeed = 0,
+          remainingSeconds = 0,
+          displayedSpeed = 0,
+        }).onError((error, stackTrace)=>{
+          setState(()=>isDownloading = false),
+          SnackbarServices().error(context, error.toString()),
+          extension = "",
+          quality = "",
+          previousReceived = 0,
+          downloadSpeed = 0,
+          remainingSeconds = 0,
+          displayedSpeed = 0,
+        });
+      } catch(error) {
+        SnackbarServices().error(context, error.toString());
+        setState(()=>isDownloading = false);
+        extension = "";
+        quality = "";
+        previousReceived = 0;
+        downloadSpeed = 0;
+        remainingSeconds = 0;
+        displayedSpeed = 0;
+      }
+    } else {
+      SnackbarServices().warning(context, "Download is in process");
+    }
+  }
+
+  Widget VideoAudioQualityCard({
+    required bool isVideo
+  }) {
+    return Container(
+      height: 350, width: MediaQuery.of(context).size.width,
+      child: ListView.builder(
+        itemCount: formats?.length,
+        itemBuilder: (context,index){
+          final data = formats?[index] as Map<String, dynamic>?;
+          final size = data?['filesize'];
+
+          return (data?['ext']== (isVideo ? "mp4" : "m4a") && (isVideo ? ((data?['vbr'] ?? 0) as num).toInt()>0 : true)) ? Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Container(
+              height: 50,width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                  color: Color(0xff1B1B1B),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 60,
+                          decoration: BoxDecoration(
+                              color: Color(0xff3B2C88),
+                              borderRadius: BorderRadius.circular(5)
+                          ),
+                          child: Center(
+                            child: Text("${data?['format_note'] ?? "NA"}",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Color(0xff9F8DF0),
+                                  fontWeight: FontWeight.w500
+                              ),),),
+                        ),
+                        SizedBox(width: 10,),
+                        Text("${data?['ext']}", style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Color(0xffB8B8BD),
+                            fontWeight: FontWeight.w500
+                        ),),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                          child: Text("•",style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Color(0xffB8B8BD),
+                              fontWeight: FontWeight.w500
+                          ),),
+                        ),
+                        Text(
+                            isVideo
+                                ? "${data?['fps'] ?? '-'} FPS"
+                                : "${data?['audio_channels'] ?? '-'} CH",
+                          style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Color(0xffB8B8BD),
+                              fontWeight: FontWeight.w500
+                          ),),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                          child: Text("•",style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Color(0xffB8B8BD),
+                              fontWeight: FontWeight.w500
+                          ),),
+                        ),
+                        Text("${(((isVideo ? (data?['vbr']) : (data?['abr'])) ?? 0) as num).toInt()}k", style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Color(0xffB8B8BD),
+                            fontWeight: FontWeight.w500
+                        ),),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 7),
+                          child: Text("•",style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Color(0xffB8B8BD),
+                              fontWeight: FontWeight.w500
+                          ),),
+                        ),
+                        Text("${size == null ? 'Unknown' : '${double.parse(bytesToMb(size))>1024?(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)+" GB":bytesToMb(size)+" MB"}'}",
+                          style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Color(0xffB8B8BD),
+                              fontWeight: FontWeight.w500
+                          ),),
+                      ],
+                    ),
+                    GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white10
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(7),
+                            child: Center(child: Icon(Boxicons.bx_arrow_to_bottom,size: 21,color: Colors.white,)),
+                          ),
+                        ),
+                      ),
+                      onTap: () async {
+                        await downloadFileById(
+                            url: urlController.text.toString(),
+                            formatID: data?['format_id'],
+                            isVideo: isVideo,
+                            quality: "${data?['format_note']}");
+                      },
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ) : SizedBox();
+        },
       ),
     );
   }

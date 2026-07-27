@@ -68,8 +68,11 @@ class VideoServices {
     required String savePath,
     required bool isVideo,
     required void Function(int received, int total) onProgress
-}) async {
-    final endPoint = isVideo ? "${baseUrl}/user/video/qualitydownload" : "${baseUrl}/user/audio/qualitydownload" ;
+  }) async {
+    final endPoint = isVideo ?
+    "${baseUrl}/user/video/qualitydownload" :
+    "${baseUrl}/user/audio/qualitydownload" ;
+
     final Dio dio = Dio();
 
     try {
