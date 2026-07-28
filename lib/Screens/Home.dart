@@ -7,8 +7,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:you_pirate_app/API%20Services/VideoServices.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:you_pirate_app/Database/database_helper.dart';
 import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
 import 'package:you_pirate_app/Services/SnackbarServices.dart';
+import 'package:you_pirate_app/Database/database_services.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -16,6 +18,7 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
   final urlController = TextEditingController();
   final dio = Dio();
   final path = "/storage/emulated/0/Download/";
@@ -107,6 +110,8 @@ class _HomeState extends State<Home> {
                       SnackbarServices().error(context,"Enter video link");
                     } else if(fetchInfo){
                       SnackbarServices().warning(context, "Fetching video information");
+                    } else if(isDownloading) {
+                      SnackbarServices().warning(context, "Download is in progress");
                     } else {
                       setState(() => infoLoading = true);
                       fetchInfo = true;
@@ -401,6 +406,25 @@ class _HomeState extends State<Home> {
                               quality = "",
                               remainingSeconds = 0,
                               displayedSpeed = 0,
+                              await DatabaseServices().insertDownload({
+                                'title': videoInfo?['title'].toString(),
+                                'thumbnail': videoInfo?['thumbnail'].toString(),
+                                'sourceUrl': urlController.text.toString(),
+                                'platform': videoInfo?['extractor'].toString().toUpperCase(),
+                                'mediaType': "video",
+                                'formatId': "bv*+ba/b",
+                                'quality': quality,
+                                'extension': extension,
+                                'filePath': savePath,
+                                'fileSize': "NA",
+                                'duration': videoInfo?['duration_string'].toString(),
+                                'downloadDate': DateTime.now().toString(),
+                                'status': 1,
+                              }).then((result){
+                                print("Data saved to local storage ROW ID: ${result.toString()}");
+                              }).onError((error, stackTrace){
+                                print("ERROR: ${error.toString()}");
+                              })
                             }).onError((error, stackTrace)=>{
                               setState(()=>isDownloading = false),
                               SnackbarServices().error(context, error.toString()),
@@ -540,8 +564,7 @@ class _HomeState extends State<Home> {
                     switchOutCurve: Curves.easeOut,
                     switchInCurve: Curves.easeIn,
                     child: isVideo ?
-                    VideoAudioQualityCard(isVideo: isVideo) :
-                    VideoAudioQualityCard(isVideo: isVideo)
+                    VideoAudioQualityCard(isVideo: isVideo) : VideoAudioQualityCard(isVideo: isVideo)
                   ),
                 ],
               )
@@ -793,7 +816,7 @@ class _HomeState extends State<Home> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
-                          width: 60,
+                          width: 70,
                           decoration: BoxDecoration(
                               color: Color(0xff3B2C88),
                               borderRadius: BorderRadius.circular(5)
@@ -860,15 +883,16 @@ class _HomeState extends State<Home> {
                     ),
                     GestureDetector(
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 5),
+                        padding: const EdgeInsets.only(right: 0),
                         child: Container(
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white10
-                          ),
+                          // decoration: BoxDecoration(
+                          //     shape: BoxShape.circle,
+                          //     color: Colors.white10
+                          // ),
                           child: Padding(
-                            padding: const EdgeInsets.all(7),
-                            child: Center(child: Icon(Boxicons.bx_arrow_to_bottom,size: 21,color: Colors.white,)),
+                            padding: const EdgeInsets.all(5),
+                            child: Center(
+                                child: Lottie.asset("assets/Animations/download_icon.json", height: 55, )),
                           ),
                         ),
                       ),
