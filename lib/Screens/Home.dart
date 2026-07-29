@@ -8,6 +8,7 @@ import 'package:lottie/lottie.dart';
 import 'package:you_pirate_app/API%20Services/VideoServices.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:you_pirate_app/Database/database_helper.dart';
+import 'package:you_pirate_app/Screens/History.dart';
 import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
 import 'package:you_pirate_app/Services/SnackbarServices.dart';
 import 'package:you_pirate_app/Database/database_services.dart';
@@ -82,6 +83,16 @@ class _HomeState extends State<Home> {
                 fontSize: 24,
                 color: Colors.white),)),
           centerTitle: true,
+      actions: [
+        IconButton(
+          icon: Icon(Icons.history),
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (builder){
+              return DownloadHistory();
+            }));
+          },
+        )
+      ],
       backgroundColor: Color(0xff111111),),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 13),
@@ -391,37 +402,24 @@ class _HomeState extends State<Home> {
                                     setState(() => {});
                                   }
                                 }).then((result) async =>{
-                              debugPrint("Media downloaded"),
+                                  debugPrint("Media downloaded"),
                               debugPrint("Pushing file into Internal Storage"),
                               await MediaStorePlusServices.pushVideoToInternal(
                                 savePath,
                               ),
                               setState(()=>isDownloading = false),
-                              progress,totalBytes,receivedBytes=0,
+                              progress,receivedBytes=0,
                               debugPrint("Stored into Internal Storage"),
                               SnackbarServices().success(context, "Download Completed"),
                               previousReceived = 0,
                               downloadSpeed = 0,
-                              extension = "",
-                              quality = "",
+
                               remainingSeconds = 0,
                               displayedSpeed = 0,
-                              await DatabaseServices().insertDownload({
-                                'title': videoInfo?['title'].toString(),
-                                'thumbnail': videoInfo?['thumbnail'].toString(),
-                                'sourceUrl': urlController.text.toString(),
-                                'platform': videoInfo?['extractor'].toString().toUpperCase(),
-                                'mediaType': "video",
-                                'formatId': "bv*+ba/b",
-                                'quality': quality,
-                                'extension': extension,
-                                'filePath': savePath,
-                                'fileSize': "NA",
-                                'duration': videoInfo?['duration_string'].toString(),
-                                'downloadDate': DateTime.now().toString(),
-                                'status': 1,
-                              }).then((result){
-                                print("Data saved to local storage ROW ID: ${result.toString()}");
+                              await saveToDownloadHistory(savePath,true, "bv*+ba/b").then((result){
+                                extension = "";
+                                quality = "";
+                                print("Data saved to local storage ");
                               }).onError((error, stackTrace){
                                 print("ERROR: ${error.toString()}");
                               })
@@ -696,6 +694,30 @@ class _HomeState extends State<Home> {
     );
   }
 
+  Future<void> saveToDownloadHistory  (String savePath, bool isVideo, String formatId) async {
+    try {
+      await DatabaseServices().insertDownload({
+        'title': videoInfo?['title'].toString(),
+        'thumbnail': videoInfo?['thumbnail'].toString(),
+        'sourceUrl': urlController.text.toString(),
+        'platform': videoInfo?['extractor'].toString().toUpperCase(),
+        'mediaType': isVideo ? "video" : "audio",
+        'formatId': formatId,
+        'quality': quality,
+        'extension': extension,
+        'filePath': savePath,
+        'fileSize': double.parse(bytesToMb(totalBytes))>1024?(double.parse(bytesToMb(totalBytes))/1024).toStringAsFixed(2)+"GB":bytesToMb(totalBytes)+"MB",
+        'duration': videoInfo?['duration_string'].toString(),
+        'downloadDate': DateTime.now().toString(),
+        'status': 1,
+      }).onError((error, stackTrace){
+        throw error.toString();
+      });
+    } catch(error) {
+      throw error.toString();
+    }
+  }
+
   Future<void> downloadFileById({
     required String url,
     required String formatID,
@@ -751,9 +773,15 @@ class _HomeState extends State<Home> {
             await MediaStorePlusServices.pushAudioToInternal(savePath),
 
           setState(()=>isDownloading = false),
-          progress,totalBytes,receivedBytes=0,
+          progress,receivedBytes=0,
           print("Download Completed"),
           SnackbarServices().success(context, "Download Completed"),
+          await saveToDownloadHistory(savePath, isVideo, formatID).then((result){
+            print("Data saved to local storage ");
+          }).onError((error, stackTrace){
+            print("ERROR: ${error.toString()}");
+          }),
+          totalBytes = 0,
           extension = "",
           quality = "",
           previousReceived = 0,
