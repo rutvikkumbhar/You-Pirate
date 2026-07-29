@@ -76,6 +76,7 @@ flutter:
     - assets/Animations/loading.json
     - assets/Animations/chill_guy.json
     - assets/Animations/download_icon.json
+    - assets/Animations/no_downloads.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

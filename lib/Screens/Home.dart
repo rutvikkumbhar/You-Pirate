@@ -85,13 +85,13 @@ class _HomeState extends State<Home> {
           centerTitle: true,
       actions: [
         IconButton(
-          icon: Icon(Icons.history),
+          icon: Icon(Icons.history,color: Colors.white70,),
           onPressed: () {
             Navigator.push(context, MaterialPageRoute(builder: (builder){
               return DownloadHistory();
             }));
           },
-        )
+        ),
       ],
       backgroundColor: Color(0xff111111),),
       body: Padding(
@@ -223,7 +223,7 @@ class _HomeState extends State<Home> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text((videoInfo?['title'].toString().length ?? "".length) >50?"${videoInfo?['title'].toString().substring(0,55)}...":videoInfo?['title'] ?? "",
+                                Text((videoInfo?['title'].toString().length ?? "".length) >55?"${videoInfo?['title'].toString().substring(0,55)}...":videoInfo?['title'] ?? "",
                                   style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: Colors.white,
@@ -706,7 +706,7 @@ class _HomeState extends State<Home> {
         'quality': quality,
         'extension': extension,
         'filePath': savePath,
-        'fileSize': double.parse(bytesToMb(totalBytes))>1024?(double.parse(bytesToMb(totalBytes))/1024).toStringAsFixed(2)+"GB":bytesToMb(totalBytes)+"MB",
+        'fileSize': double.parse(bytesToMb(totalBytes))>1024?"${(double.parse(bytesToMb(totalBytes))/1024).toStringAsFixed(2)} GB":"${bytesToMb(totalBytes)} MB",
         'duration': videoInfo?['duration_string'].toString(),
         'downloadDate': DateTime.now().toString(),
         'status': 1,

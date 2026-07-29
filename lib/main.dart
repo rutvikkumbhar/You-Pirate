@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "You Pirate",
       home: Home(),
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
