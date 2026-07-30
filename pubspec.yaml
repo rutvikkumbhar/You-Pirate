@@ -71,12 +71,13 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - .env
-    - assets/test.webp
-    - assets/pirate_ship.png
+    - assets/images/download.svg
     - assets/Animations/loading.json
     - assets/Animations/chill_guy.json
     - assets/Animations/download_icon.json
     - assets/Animations/no_downloads.json
+    - assets/Animations/sad.json
+    - assets/Animations/delete.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

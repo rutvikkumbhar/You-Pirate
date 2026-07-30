@@ -223,7 +223,7 @@ class _HomeState extends State<Home> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text((videoInfo?['title'].toString().length ?? "".length) >55?"${videoInfo?['title'].toString().substring(0,55)}...":videoInfo?['title'] ?? "",
+                                Text((videoInfo?['title'].toString().length ?? "".length) >50?"${videoInfo?['title'].toString().substring(0,50)}...":videoInfo?['title'] ?? "",
                                   style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: Colors.white,
@@ -911,16 +911,16 @@ class _HomeState extends State<Home> {
                     ),
                     GestureDetector(
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 0),
+                        padding: const EdgeInsets.only(right:  5),
                         child: Container(
-                          // decoration: BoxDecoration(
-                          //     shape: BoxShape.circle,
-                          //     color: Colors.white10
-                          // ),
+                          decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xff503bd1).withValues(alpha: 0.2)
+                          ),
                           child: Padding(
-                            padding: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(9),
                             child: Center(
-                                child: Lottie.asset("assets/Animations/download_icon.json", height: 55, )),
+                                child: FaIcon(FontAwesomeIcons.arrowDown, color: Color(0xff503bd1),size: 16,)),
                           ),
                         ),
                       ),
