@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
@@ -6,6 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:you_pirate_app/Database/database_services.dart';
 import 'package:you_pirate_app/Services/SnackbarServices.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DownloadHistory extends StatefulWidget {
   @override
@@ -13,6 +17,28 @@ class DownloadHistory extends StatefulWidget {
 }
 
 class _DownloadHistoryState extends State<DownloadHistory> {
+
+  Future<void> openMediaFile(BuildContext context, String path) async {
+    final file = File(path);
+    if(!await file.exists()) {
+      SnackbarServices().error(context, "File does not exists");
+      return;
+    }
+   await OpenFilex.open(path);
+  }
+
+  Future<void> shareMediaFile(BuildContext context, String path) async {
+    final file = File(path);
+    if(!await file.exists()) {
+      SnackbarServices().error(context, "File does not exists");
+      return;
+    }
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path)]
+      )
+    );
+  }
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff111111),
@@ -95,19 +121,19 @@ class _DownloadHistoryState extends State<DownloadHistory> {
             icon,
             SizedBox(width: 12,),
             Text(key, style: GoogleFonts.poppins(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.white70,
               fontWeight: FontWeight.w400
             ),),
           ],
         ),
-        SizedBox(width: 25,),
+        SizedBox(width: 55,),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(value, style: GoogleFonts.poppins(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: Colors.white70,
                   fontWeight: FontWeight.w400
               ),),
@@ -146,7 +172,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),),
                 SizedBox(height: 20,),
                 metaDataRow(
-                  Icon(Boxicons.bxl_youtube,color: Color(0xff503bd1),size: 21,),
+                  Icon(Boxicons.bxl_youtube,color: Color(0xff503bd1),size: 20,),
                   "Platform", data['platform']
                 ),
                 Padding(
@@ -157,8 +183,8 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bxs_movie_play,color: Color(0xff503bd1),size: 21,),
-                    "Media Type", data['mediaType']
+                    Icon(Boxicons.bxs_movie_play,color: Color(0xff503bd1),size: 20,),
+                    "Media Type", data['mediaType'].toString().toUpperCase()
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -168,7 +194,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bxs_film,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bxs_film,color: Color(0xff503bd1),size: 20,),
                     "Quality", data['quality']
                 ),
                 Padding(
@@ -179,7 +205,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bx_hash,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bx_hash,color: Color(0xff503bd1),size: 20,),
                     "Format ID", data['formatId']
                 ),
                 Padding(
@@ -190,7 +216,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bxs_file,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bxs_file,color: Color(0xff503bd1),size: 20,),
                     "Extension", data['extension'].toString().toUpperCase()
                 ),
                 Padding(
@@ -201,8 +227,8 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bx_time,color: Color(0xff503bd1),size: 21,),
-                    "Duration", data['duration']
+                    Icon(Boxicons.bx_time,color: Color(0xff503bd1),size: 20,),
+                    "Duration", data['duration'].toString().isEmpty ? data['duration'] : "NA"
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -212,7 +238,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bxs_data,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bxs_data,color: Color(0xff503bd1),size: 20,),
                     "File Size", data['fileSize']
                 ),
                 Padding(
@@ -223,7 +249,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bxs_calendar,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bxs_calendar,color: Color(0xff503bd1),size: 20,),
                     "Downloaded On", DateTime.parse(data['downloadDate'])
                     .toIso8601String()
                     .split('T')
@@ -237,7 +263,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bxs_folder,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bxs_folder,color: Color(0xff503bd1),size: 20,),
                     "Saved Location",
                     data['mediaType'] == "video"
                         ? "/storage/emulated/0/DCIM/You Pirate/"
@@ -251,7 +277,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   ),
                 ),
                 metaDataRow(
-                    Icon(Boxicons.bx_link,color: Color(0xff503bd1),size: 21,),
+                    Icon(Boxicons.bx_link,color: Color(0xff503bd1),size: 20,),
                     "Original URL", ""
                 ),
                 SizedBox(height: 5,),
@@ -279,7 +305,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                         borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
                     ),
                     suffixIcon: IconButton(
-                      icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),),
+                      icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),size: 21,),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: data['sourceUrl'].toString()));
                       },
@@ -288,8 +314,68 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 SizedBox(height: 15,),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-
+                    GestureDetector(
+                      onTap: () {
+                        deleteDownloadConfirmation(data['id'].toString(), true);
+                      },
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Color(0xffD90000),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.transparent)
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Center(
+                            child: Text("Delete Record", style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500
+                            ),),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 15,),
+                    GestureDetector(
+                      onTap: () async {
+                        String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title']+".mp4";
+                        String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title']+".m4a";
+                        bool isVideo = data['mediaType'] == "video" ? true : false;
+                       await  openMediaFile(context, isVideo ? videoPath : audioPath );
+                      },
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.4)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Center(
+                            child: Text("Open File", style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Color(0xff503bd1),
+                                fontWeight: FontWeight.w500
+                            ),),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 15,),
+                    IconButton(
+                      icon: Icon(Boxicons.bxs_share_alt,size: 23,color: Color(0xff503bd1),),
+                      onPressed: () async {
+                        String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title']+".mp4";
+                        String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title']+".m4a";
+                        bool isVideo = data['mediaType'] == "video" ? true : false;
+                        await shareMediaFile(context, isVideo ? videoPath : audioPath );
+                      },
+                    )
                   ],
                 )
               ],
@@ -395,12 +481,24 @@ class _DownloadHistoryState extends State<DownloadHistory> {
         context: context,
         builder: (BuildContext dialogContext) {
           return AlertDialog(
-            title: Text("Confirm Deletion",
-              style: GoogleFonts.poppins(
-                  fontSize: 17,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500
-              ),),
+            title: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Confirm Deletion",
+                  style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500
+                  ),),
+                Text("This action will not affect your original media file",
+                  style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500
+                  ),),
+              ],
+            ),
             backgroundColor: Color(0xff1B1B1B),
             content: Lottie.asset("assets/Animations/delete.json", height: 110,width: 110),
             actions: [

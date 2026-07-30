@@ -734,11 +734,6 @@ class _HomeState extends State<Home> {
         setState(() => fetchingStream = true);
         Directory dir = await getApplicationDocumentsDirectory();
         String savePath = "${dir.path}/${videoInfo?['title']}.${extension}";
-        // if(isVideo)
-        //   savePath = "${dir.path}/${videoInfo?['title']}.${exe}";
-        // else
-        //   savePath = "${dir.path}/${videoInfo?['title']}.m4a";
-        // savePath = "${dir.path}/${videoInfo?['title']}.mp4";
         VideoServices.downloadFileById(
             url: url,
             formatId: formatID,
