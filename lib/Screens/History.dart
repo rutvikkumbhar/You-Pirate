@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -82,88 +83,310 @@ class _DownloadHistoryState extends State<DownloadHistory> {
     );
   }
 
-  Widget downloadHistoryCard(Map<String, dynamic> data) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12,vertical: 5),
-        child: Container(
-            height: 75,width: MediaQuery.of(context).size.width,
-            decoration: BoxDecoration(
-                color: Color(0xff1B1B1B),
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
-            ),
-            child:Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-              child: Row(mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    height: 45,width: 45,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0xff503bd1).withValues(alpha: 0.7),
-                    ),
-                    child: Center(
-                        child: data['mediaType']=="video" ? Icon(Boxicons.bxs_film, size: 23,color: Colors.white70,)
-                            : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Colors.white70,)),
-                  ),
-                  SizedBox(width: 15,),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text((data['title'].toString().length) >35?"${data['title'].toString().substring(0,35)}...":data['title'],
-                        style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Text("${data['extension'].toString().toUpperCase()}",
-                            style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Color(0xff503bd1),
-                                fontWeight: FontWeight.w500
-                            ),),
-                          SizedBox(width: 11,),
-                          Text("•",
-                            style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500
-                            ),),
-                          SizedBox(width: 11,),
-                          Text("${data['quality']}",
-                            style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500
-                            ),),
-                          SizedBox(width: 11,),
-                          Text("•",
-                            style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500
-                            ),),
-                          SizedBox(width: 11,),
-                          Text("${data['fileSize']}",
-                            style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w500
-                            ),),
-                        ],
-                      )
-                    ],
-                  )
-                ],
-              ),
-            )
+  Widget metaDataRow (Widget icon,String key, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            icon,
+            SizedBox(width: 12,),
+            Text(key, style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: Colors.white70,
+              fontWeight: FontWeight.w400
+            ),),
+          ],
+        ),
+        SizedBox(width: 25,),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(value, style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w400
+              ),),
+            ],
+          ),
         )
+      ],
+    );
+  }
+
+  Future<dynamic> mediaMetaDataDialog(Map<String, dynamic> data) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Color(0xff1B1B1B),
+          insetPadding: EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 130,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(image: NetworkImage(data['thumbnail'],),fit: BoxFit.cover)
+                  ),
+                ),
+                SizedBox(height: 12,),
+                Text("${data['title']}", style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500
+                ),),
+                SizedBox(height: 20,),
+                metaDataRow(
+                  Icon(Boxicons.bxl_youtube,color: Color(0xff503bd1),size: 21,),
+                  "Platform", data['platform']
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bxs_movie_play,color: Color(0xff503bd1),size: 21,),
+                    "Media Type", data['mediaType']
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bxs_film,color: Color(0xff503bd1),size: 21,),
+                    "Quality", data['quality']
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bx_hash,color: Color(0xff503bd1),size: 21,),
+                    "Format ID", data['formatId']
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bxs_file,color: Color(0xff503bd1),size: 21,),
+                    "Extension", data['extension'].toString().toUpperCase()
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bx_time,color: Color(0xff503bd1),size: 21,),
+                    "Duration", data['duration']
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bxs_data,color: Color(0xff503bd1),size: 21,),
+                    "File Size", data['fileSize']
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bxs_calendar,color: Color(0xff503bd1),size: 21,),
+                    "Downloaded On", DateTime.parse(data['downloadDate'])
+                    .toIso8601String()
+                    .split('T')
+                    .first
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bxs_folder,color: Color(0xff503bd1),size: 21,),
+                    "Saved Location",
+                    data['mediaType'] == "video"
+                        ? "/storage/emulated/0/DCIM/You Pirate/"
+                        : "/storage/emulated/0/Music/You Pirate/"
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  child: Container(
+                    height: 0.5,width: MediaQuery.of(context).size.width,
+                    color: Colors.grey.withValues(alpha: 0.3),
+                  ),
+                ),
+                metaDataRow(
+                    Icon(Boxicons.bx_link,color: Color(0xff503bd1),size: 21,),
+                    "Original URL", ""
+                ),
+                SizedBox(height: 5,),
+                TextField(
+                  readOnly: true ,
+                  decoration: InputDecoration(
+                    hintText: data['sourceUrl'],
+                    hintStyle: GoogleFonts.poppins(
+                      color: Colors.white70,
+                      fontSize: 12
+                    ),
+                    filled: true,
+                    fillColor: Color(0xff111111),
+                    contentPadding: EdgeInsets.symmetric(vertical: 5,horizontal: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: data['sourceUrl'].toString()));
+                      },
+                    )
+                  ),
+                ),
+                SizedBox(height: 15,),
+                Row(
+                  children: [
+
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
+
+  Widget downloadHistoryCard(Map<String, dynamic> data) {
+    return GestureDetector(
+      onTap: () {
+        mediaMetaDataDialog(data);
+      },
+      child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12,vertical: 5),
+          child: Container(
+              height: 75,width: MediaQuery.of(context).size.width,
+              decoration: BoxDecoration(
+                  color: Color(0xff1B1B1B),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
+              ),
+              child:Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                child: Row(mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 45,width: 45,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xff503bd1).withValues(alpha: 0.7),
+                      ),
+                      child: Center(
+                          child: data['mediaType']=="video" ? Icon(Boxicons.bxs_film, size: 23,color: Colors.white70,)
+                              : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Colors.white70,)),
+                    ),
+                    SizedBox(width: 15,),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text((data['title'].toString().length) >35?"${data['title'].toString().substring(0,35)}...":data['title'],
+                          style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Text("${data['extension'].toString().toUpperCase()}",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Color(0xff503bd1),
+                                  fontWeight: FontWeight.w500
+                              ),),
+                            SizedBox(width: 11,),
+                            Text("•",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w500
+                              ),),
+                            SizedBox(width: 11,),
+                            Text("${data['quality']}",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w500
+                              ),),
+                            SizedBox(width: 11,),
+                            Text("•",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w500
+                              ),),
+                            SizedBox(width: 11,),
+                            Text("${data['fileSize']}",
+                              style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                  fontWeight: FontWeight.w500
+                              ),),
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              )
+          )
+      ),
     );
   }
 
@@ -178,6 +401,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   color: Colors.white,
                   fontWeight: FontWeight.w500
               ),),
+            backgroundColor: Color(0xff1B1B1B),
             content: Lottie.asset("assets/Animations/delete.json", height: 110,width: 110),
             actions: [
               Row(
@@ -244,7 +468,6 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ],
               ),
             ],
-            backgroundColor: Color(0xff1B1B1B),
           );
         });
   }
