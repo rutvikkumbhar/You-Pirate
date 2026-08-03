@@ -21,6 +21,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   final urlController = TextEditingController();
+  final FocusNode urlInputFocus = FocusNode();
   final dio = Dio();
   final path = "/storage/emulated/0/Download/";
   double progress = 0;
@@ -90,6 +91,7 @@ class _HomeState extends State<Home> {
             Navigator.push(context, MaterialPageRoute(builder: (builder){
               return DownloadHistory();
             }));
+            urlInputFocus.unfocus();
           },
         ),
       ],
@@ -106,6 +108,8 @@ class _HomeState extends State<Home> {
               keyboardType: TextInputType.url,
               controller: urlController,
               style: TextStyle(color: Colors.white),
+              autofocus: false,
+              focusNode: urlInputFocus,
               decoration: InputDecoration(
                 hintText: "Paste link",
                 hintStyle: TextStyle(color: Colors.white60,),
@@ -120,10 +124,13 @@ class _HomeState extends State<Home> {
                     if(urlController.text.isEmpty){
                       SnackbarServices().error(context,"Enter video link");
                     } else if(fetchInfo){
+                      urlInputFocus.unfocus();
                       SnackbarServices().warning(context, "Fetching video information");
                     } else if(isDownloading) {
+                      urlInputFocus.unfocus();
                       SnackbarServices().warning(context, "Download is in progress");
                     } else {
+                      urlInputFocus.unfocus();
                       setState(() => infoLoading = true);
                       fetchInfo = true;
                       try {
@@ -190,7 +197,7 @@ class _HomeState extends State<Home> {
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(5),
                                       image: DecorationImage(
-                                          image: videoInfo?['thumbnail'] == null? AssetImage("assets/test.webp"):NetworkImage(videoInfo?['thumbnail']),
+                                          image: videoInfo?['thumbnail'] == null? AssetImage("assets/images/no-thumbnail.png"):NetworkImage(videoInfo?['thumbnail']),
                                           fit: BoxFit.cover)
                                   ),
                                 ),

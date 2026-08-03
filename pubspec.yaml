@@ -74,6 +74,7 @@ flutter:
   assets:
     - .env
     - assets/images/download.svg
+    - assets/images/no-thumbnail.png
     - assets/Animations/loading.json
     - assets/Animations/chill_guy.json
     - assets/Animations/download_icon.json

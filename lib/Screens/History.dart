@@ -35,6 +35,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
     }
     await SharePlus.instance.share(
       ShareParams(
+        text: "Shared from You Pirate!",
         files: [XFile(path)]
       )
     );
@@ -59,8 +60,11 @@ class _DownloadHistoryState extends State<DownloadHistory> {
         actions: [
           IconButton(
             icon: Icon(Icons.delete_rounded, color: Colors.red.withValues(alpha: 0.7),),
-            onPressed: () {
-              deleteDownloadConfirmation("", false);
+            onPressed: () async {
+              bool isDeleted = await deleteDownloadConfirmation("", false) ?? false;
+              if(isDeleted) {
+                setState(()=>{});
+              }
             },
           )
         ],
@@ -86,7 +90,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Lottie.asset("assets/Animations/no_downloads.json", height: 100),
-                  Text("No Downloads Yet!!!",
+                  Text("No Downloads Yet!",
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     color: Colors.white,
@@ -161,7 +165,11 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   width: MediaQuery.of(context).size.width,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    image: DecorationImage(image: NetworkImage(data['thumbnail'],),fit: BoxFit.cover)
+                    image: DecorationImage(
+                        image: data['thumbnail']!= null
+                            ? NetworkImage(data['thumbnail'])
+                            : AssetImage("assets/images/no-thumbnail.png"),
+                        fit: BoxFit.cover)
                   ),
                 ),
                 SizedBox(height: 12,),
@@ -318,8 +326,11 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        deleteDownloadConfirmation(data['id'].toString(), true);
+                      onTap: () async {
+                       bool isDeleted = await deleteDownloadConfirmation(data['id'].toString(), true);
+                       if(isDeleted) {
+                         Navigator.pop(context, true);
+                       }
                       },
                       child: Container(
                         height: 40,
@@ -388,8 +399,11 @@ class _DownloadHistoryState extends State<DownloadHistory> {
 
   Widget downloadHistoryCard(Map<String, dynamic> data) {
     return GestureDetector(
-      onTap: () {
-        mediaMetaDataDialog(data);
+      onTap: () async {
+        bool isDeleted = await mediaMetaDataDialog(data) ?? false;
+        if(isDeleted) {
+          setState(()=>{});
+        }
       },
       child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12,vertical: 5),
@@ -398,7 +412,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
               decoration: BoxDecoration(
                   color: Color(0xff1B1B1B),
                   borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
+                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2),),
               ),
               child:Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
@@ -412,7 +426,8 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                         color: Color(0xff503bd1).withValues(alpha: 0.7),
                       ),
                       child: Center(
-                          child: data['mediaType']=="video" ? Icon(Boxicons.bxs_film, size: 23,color: Colors.white70,)
+                          child: data['mediaType']=="video"
+                              ? Icon(Boxicons.bxs_video, size: 23,color: Colors.white70,)
                               : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Colors.white70,)),
                     ),
                     SizedBox(width: 15,),
@@ -420,7 +435,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text((data['title'].toString().length) >35?"${data['title'].toString().substring(0,35)}...":data['title'],
+                        Text((data['title'].toString().length) > 35?"${data['title'].toString().substring(0,35)}...":data['title'],
                           style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 15,
@@ -505,60 +520,62 @@ class _DownloadHistoryState extends State<DownloadHistory> {
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      height: 45,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Color(0xff503bd1))
-                      ),
-                      child: Center(
-                        child: TextButton(
-                            child: Text("Cancel",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  color: Color(0xff503bd1),
-                                  fontWeight: FontWeight.w500
-                              ),),
-                            onPressed: () {
-                              Navigator.pop(context);
-                            }
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context, false);
+                      },
+                      child: Container(
+                        height: 45,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: Color(0xff503bd1))
+                        ),
+                        child: Center(
+                          child: Text("Cancel",
+                            style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                color: Color(0xff503bd1),
+                                fontWeight: FontWeight.w500
+                            ),),
                         ),
                       ),
                     ),
                   ),
                   SizedBox(width: 10,),
                   Expanded(
-                    child: Container(
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: Color(0xffD90000),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Center(
-                        child: TextButton(
-                            child: Text("Delete",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500
-                              ),),
-                            onPressed: () async {
-                              if(isSingle) {
-                                await DatabaseServices().deleteDownloadById(recordId).then((result)=>{
-                                  SnackbarServices().success(context, "Download History Deleted!"),
-                                  Navigator.pop(context),
-                                }).onError((error, stackTrace)=>{
-                                  SnackbarServices().error(context, error.toString()),
-                                });
-                              } else {
-                                await DatabaseServices().deleteAllDownload().then((result)=>{
-                                  SnackbarServices().success(context, "Download History Deleted!"),
-                                  Navigator.pop(context),
-                                }).onError((error, stackTrace)=>{
-                                  SnackbarServices().error(context, error.toString()),
-                                });
-                              }
-                            }
+                    child: GestureDetector(
+                      onTap: () async {
+                        if(isSingle) {
+                          await DatabaseServices().deleteDownloadById(recordId).then((result)=>{
+                            SnackbarServices().success(context, "Download History Deleted!"),
+                            Navigator.pop(context,true),
+                          }).onError((error, stackTrace)=>{
+                            SnackbarServices().error(context, error.toString()),
+                            Navigator.pop(context, false),
+                          });
+                        } else {
+                          await DatabaseServices().deleteAllDownload().then((result)=>{
+                            SnackbarServices().success(context, "Download History Deleted!"),
+                            Navigator.pop(context, true),
+                          }).onError((error, stackTrace)=>{
+                            SnackbarServices().error(context, error.toString()),
+                            Navigator.pop(context, false),
+                          });
+                        }
+                      },
+                      child: Container(
+                        height: 45,
+                        decoration: BoxDecoration(
+                          color: Color(0xffD90000),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Center(
+                          child: Text("Delete",
+                            style: GoogleFonts.poppins(
+                                fontSize: 15,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500
+                            ),),
                         ),
                       ),
                     ),
