@@ -18,6 +18,8 @@ class DownloadHistory extends StatefulWidget {
 
 class _DownloadHistoryState extends State<DownloadHistory> {
 
+  bool isDataAvailable = false;
+
   Future<void> openMediaFile(BuildContext context, String path) async {
     final file = File(path);
     if(!await file.exists()) {
@@ -59,11 +61,15 @@ class _DownloadHistoryState extends State<DownloadHistory> {
           ),
         actions: [
           IconButton(
-            icon: Icon(Icons.delete_rounded, color: Colors.red.withValues(alpha: 0.7),),
+            icon: Icon(Boxicons.bxs_trash, size: 22, color: Colors.red.withValues(alpha: 0.7),),
             onPressed: () async {
-              bool isDeleted = await deleteDownloadConfirmation("", false) ?? false;
-              if(isDeleted) {
-                setState(()=>{});
+              if(isDataAvailable) {
+                bool isDeleted = await deleteDownloadConfirmation("", false) ?? false;
+                if(isDeleted) {
+                  setState(()=>{});
+                }
+              } else {
+                SnackbarServices().warning(context, "No Records to Delete!");
               }
             },
           )
@@ -82,8 +88,10 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 fontSize: 13,
                 color: Colors.red,
                 fontWeight: FontWeight.w500
-              ),),);
+              ),),
+            );
           } else if(snapshot.data!.isEmpty || snapshot.hasData == false) {
+            isDataAvailable = false;
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -95,11 +103,12 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     fontSize: 15,
                     color: Colors.white,
                     fontWeight: FontWeight.w500
-                  ),)
+                  ),),
                 ],
               ),
             );
           } else {
+            isDataAvailable = true;
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index){
@@ -429,14 +438,15 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                       child: Center(
                           child: data['mediaType']=="video"
                               ? Icon(Boxicons.bxs_video, size: 23,color: Colors.white70,)
-                              : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Colors.white70,)),
+                              : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Colors.white70,)
+                      ),
                     ),
                     SizedBox(width: 15,),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text((data['title'].toString().length) > 35?"${data['title'].toString().substring(0,35)}...":data['title'],
+                        Text((data['title'].toString().length) > 35 ? "${data['title'].toString().substring(0,35)}..." : data['title'],
                           style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 15,

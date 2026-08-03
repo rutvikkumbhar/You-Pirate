@@ -88,9 +88,17 @@ class _HomeState extends State<Home> {
         IconButton(
           icon: Icon(Icons.history,color: Colors.white70,),
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (builder){
-              return DownloadHistory();
-            }));
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (_, _, _) => DownloadHistory(),
+                transitionsBuilder: (_, animation, _, child) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
+              ),
+            );
             urlInputFocus.unfocus();
           },
         ),
