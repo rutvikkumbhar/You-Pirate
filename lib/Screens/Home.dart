@@ -408,37 +408,38 @@ class _HomeState extends State<Home> {
                                     remainingSeconds = remainingBytes / displayedSpeed;
                                     setState(() => {});
                                   }
-                                }).then((result) async =>{
-                                  debugPrint("Media downloaded"),
-                              debugPrint("Pushing file into Internal Storage"),
-                              await MediaStorePlusServices.pushVideoToInternal(
+                                }).then((result) async {
+                                  debugPrint("Media downloaded");
+                              debugPrint("Pushing file into Internal Storage");
+                              String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
                                 savePath,
-                              ),
-                              setState(()=>isDownloading = false),
-                              progress,receivedBytes=0,
-                              debugPrint("Stored into Internal Storage"),
-                              SnackbarServices().success(context, "Download Completed"),
-                              previousReceived = 0,
-                              downloadSpeed = 0,
+                              );
+                              setState(()=>isDownloading = false);
+                              progress=0;
+                              receivedBytes=0;
+                              debugPrint("Stored into Internal Storage");
+                              SnackbarServices().success(context, "Download Completed");
+                              previousReceived = 0;
+                              downloadSpeed = 0;
 
-                              remainingSeconds = 0,
-                              displayedSpeed = 0,
-                              await saveToDownloadHistory(savePath,true, "bv*+ba/b").then((result){
+                              remainingSeconds = 0;
+                              displayedSpeed = 0;
+                              await saveToDownloadHistory(displayTitle!,true, "bv*+ba/b").then((result){
                                 extension = "";
                                 quality = "";
                                 print("Data saved to local storage ");
                               }).onError((error, stackTrace){
                                 print("ERROR: ${error.toString()}");
-                              })
-                            }).onError((error, stackTrace)=>{
-                              setState(()=>isDownloading = false),
-                              SnackbarServices().error(context, error.toString()),
-                              extension = "",
-                              quality = "",
-                              previousReceived = 0,
-                              downloadSpeed = 0,
-                              remainingSeconds = 0,
-                              displayedSpeed = 0,
+                              });
+                            }).onError((error, stackTrace){
+                              setState(()=>isDownloading = false);
+                              SnackbarServices().error(context, error.toString());
+                              extension = "";
+                              quality = "";
+                              previousReceived = 0;
+                              downloadSpeed = 0;
+                              remainingSeconds = 0;
+                              displayedSpeed = 0;
                             });
                           } catch(error) {
                             setState(()=>isDownloading = false);
@@ -701,7 +702,18 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Future<void> saveToDownloadHistory  (String savePath, bool isVideo, String formatId) async {
+  Future<void> saveToDownloadHistory  (String savedTitle, bool isVideo, String formatId) async {
+    print("DISPLAYED VIDEO TITLE: $savedTitle");
+    // print("SAVED VIDEO PATH $savePath");
+    String filePath;
+    if(isVideo) {
+      filePath = "/storage/emulated/0/DCIM/You Pirate/"+savedTitle;
+    } else {
+      filePath = "/storage/emulated/0/Music/You Pirate/"+savedTitle;
+    }
+    // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+title;
+    // String audioPath = "/storage/emulated/0/Music/You Pirate/"+title;
+    print("SAVED VIDEO PATH $filePath");
     try {
       await DatabaseServices().insertDownload({
         'title': videoInfo?['title'].toString(),
@@ -712,7 +724,7 @@ class _HomeState extends State<Home> {
         'formatId': formatId,
         'quality': quality,
         'extension': extension,
-        'filePath': savePath,
+        'filePath': filePath,
         'fileSize': double.parse(bytesToMb(totalBytes))>1024?"${(double.parse(bytesToMb(totalBytes))/1024).toStringAsFixed(2)} GB":"${bytesToMb(totalBytes)} MB",
         'duration': videoInfo?['duration_string'].toString(),
         'downloadDate': DateTime.now().toString(),
@@ -765,40 +777,43 @@ class _HomeState extends State<Home> {
               final remainingBytes = total - received;
               remainingSeconds = remainingBytes / displayedSpeed;
               setState(()=>{});
-            }).then((result) async =>{
-          debugPrint("Media downloaded"),
-          debugPrint("Pushing file into Internal Storage"),
+            }).then((result) async {
+          debugPrint("Media downloaded");
+          debugPrint("Pushing file into Internal Storage");
           // await MediaStorePlusServices.pushVideoToInternal(savePath),
-          if(isVideo)
-            await MediaStorePlusServices.pushVideoToInternal(savePath)
-          else
-            await MediaStorePlusServices.pushAudioToInternal(savePath),
-
-          setState(()=>isDownloading = false),
-          progress,receivedBytes=0,
-          print("Download Completed"),
-          SnackbarServices().success(context, "Download Completed"),
-          await saveToDownloadHistory(savePath, isVideo, formatID).then((result){
+          String? displayTitle;
+          if(isVideo) {
+            displayTitle = await MediaStorePlusServices.pushVideoToInternal(savePath);
+          } else {
+            displayTitle =
+            await MediaStorePlusServices.pushAudioToInternal(savePath);
+          }
+          setState(()=>isDownloading = false);
+          progress =0;
+          receivedBytes=0;
+          print("Download Completed");
+          SnackbarServices().success(context, "Download Completed");
+          await saveToDownloadHistory(displayTitle!, isVideo, formatID).then((result){
             print("Data saved to local storage ");
           }).onError((error, stackTrace){
             print("ERROR: ${error.toString()}");
-          }),
-          totalBytes = 0,
-          extension = "",
-          quality = "",
-          previousReceived = 0,
-          downloadSpeed = 0,
-          remainingSeconds = 0,
-          displayedSpeed = 0,
-        }).onError((error, stackTrace)=>{
-          setState(()=>isDownloading = false),
-          SnackbarServices().error(context, error.toString()),
-          extension = "",
-          quality = "",
-          previousReceived = 0,
-          downloadSpeed = 0,
-          remainingSeconds = 0,
-          displayedSpeed = 0,
+          });
+          totalBytes = 0;
+          extension = "";
+          quality = "";
+          previousReceived = 0;
+          downloadSpeed = 0;
+          remainingSeconds = 0;
+          displayedSpeed = 0;
+        }).onError((error, stackTrace){
+          setState(()=>isDownloading = false);
+          SnackbarServices().error(context, error.toString());
+          extension = "";
+          quality = "";
+          previousReceived = 0;
+          downloadSpeed = 0;
+          remainingSeconds = 0;
+          displayedSpeed = 0;
         });
       } catch(error) {
         SnackbarServices().error(context, error.toString());

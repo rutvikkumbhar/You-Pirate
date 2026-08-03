@@ -1,7 +1,7 @@
 import 'package:media_store_plus/media_store_plus.dart';
 
 class MediaStorePlusServices {
-  static Future<void> pushVideoToInternal(String tempPath) async {
+  static Future<String?> pushVideoToInternal(String tempPath) async {
     final mediaStore = MediaStore();
     try {
       final result = await mediaStore.saveFile(
@@ -12,12 +12,14 @@ class MediaStorePlusServices {
         print(result.saveStatus);
         print(result.isSuccessful);
         print(result.uri);
+        print(result.name);
       }
+      return result?.name;
     } catch(error){
       throw Exception(error.toString());
     }
   }
-  static Future<void> pushAudioToInternal (String tempPath) async {
+  static Future<String?> pushAudioToInternal (String tempPath) async {
     final mediaStore = MediaStore();
     try {
       final result = await mediaStore.saveFile(
@@ -28,7 +30,9 @@ class MediaStorePlusServices {
         print(result.saveStatus);
         print(result.isSuccessful);
         print(result.uri);
+        print(result.name);
       }
+      return result?.name;
     } catch(error) {
       throw Exception(error.toString());
     }

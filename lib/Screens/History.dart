@@ -354,10 +354,11 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     SizedBox(width: 15,),
                     GestureDetector(
                       onTap: () async {
-                        String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title']+".mp4";
-                        String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title']+".m4a";
-                        bool isVideo = data['mediaType'] == "video" ? true : false;
-                       await  openMediaFile(context, isVideo ? videoPath : audioPath );
+                        // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title'];
+                        // String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title'];
+                        // bool isVideo = data['mediaType'] == "video" ? true : false;
+                        // print("OPEN MEDIA FILE PATH $audioPath");
+                       await  openMediaFile(context, data['filePath'] );
                       },
                       child: Container(
                         height: 40,
@@ -381,10 +382,10 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     IconButton(
                       icon: Icon(Boxicons.bxs_share_alt,size: 23,color: Color(0xff503bd1),),
                       onPressed: () async {
-                        String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title']+".mp4";
-                        String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title']+".m4a";
-                        bool isVideo = data['mediaType'] == "video" ? true : false;
-                        await shareMediaFile(context, isVideo ? videoPath : audioPath );
+                        // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title'];
+                        // String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title'];
+                        // bool isVideo = data['mediaType'] == "video" ? true : false;
+                        await shareMediaFile(context, data['filePath'] );
                       },
                     )
                   ],
