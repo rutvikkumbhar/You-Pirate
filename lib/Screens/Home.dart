@@ -261,9 +261,8 @@ class _HomeState extends State<Home> {
                     duration: Duration(milliseconds: 180),
                     switchInCurve: Curves.easeIn,
                     switchOutCurve: Curves.easeOut,
-                    child: isDownloading ?
+                    child: !isDownloading ?
                     Container(
-
                       width: MediaQuery.of(context).size.width,
                       decoration: BoxDecoration(
                           color: Color(0xff1B1B1B),
@@ -272,108 +271,65 @@ class _HomeState extends State<Home> {
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(10),
-                        child: Row(
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text("${(videoInfo?['title'].toString().length ?? "".toString().length) > 25 ? (videoInfo?['title'].toString().substring(0,25)):videoInfo?['title']}...${quality}.${extension}",
-                                    style: GoogleFonts.poppins(
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500
-                                    ),),
-                                  SizedBox(height: 12),
-                                  LinearProgressIndicator(
-                                    value: progress,
-                                    color: Color(0xff5B46D8),
-                                    backgroundColor: Color(0xff343438),
-                                    borderRadius: BorderRadius.circular(10),
-                                    minHeight: 6,
-                                  ),
-                                  SizedBox(height: 12),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        "${bytesToMb(receivedBytes)}MB / ${bytesToMb(totalBytes)}MB",
-                                        style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: Colors.white70,
-                                            fontWeight: FontWeight.w500
-                                        ),
-                                      ),
-                                      Text(formatSpeed(displayedSpeed),
-                                        style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: Color(0xff503bd1),
-                                            fontWeight: FontWeight.w500
-                                        ),
-                                      ),
-                                      Text(
-                                        "${formatRemaining(remainingSeconds)} left",
-                                        style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: Colors.white70,
-                                            fontWeight: FontWeight.w500
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 15,),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            Row(
+                              // crossAxisAlignment: CrossAxisAlignment.space,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                Text("${(videoInfo?['title'].toString().length ?? "".toString().length) > 30 ? (videoInfo?['title'].toString().substring(0,30)):videoInfo?['title']}...${quality}.${extension}",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500
+                                  ),
+                                ),
                                 Text("${(progress * 100).toStringAsFixed(1)}%",
                                   style: GoogleFonts.poppins(
                                       fontSize: 15,
                                       color: Color(0xff503bd1),
                                       fontWeight: FontWeight.w500
-                                  ),),
-                                SizedBox(height: 10,),
-                                Row(
-                                  children: [
-                                    GestureDetector(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                            color: Color(0xff503bd1),
-                                            shape: BoxShape.circle
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8),
-                                          child: Center(
-                                              child: Icon(Icons.pause_rounded,size: 20,color: Colors.white,)),
-                                        ),
-                                      ),
-                                      onTap: () {
-                                        // Pause and Resume code here
-                                      },
-                                    ),
-                                    SizedBox(width: 10),
-                                    GestureDetector(
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                            color: Colors.white10,
-                                            shape: BoxShape.circle
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8),
-                                          child: Center(
-                                              child: Icon(Boxicons.bx_x,size: 20,color: Colors.white,)),
-                                        ),
-                                      ),
-                                      onTap: () {
-                                        // Cancel download code here
-                                      },
-                                    ),
-                                  ],
-                                )
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 12),
+                            LinearProgressIndicator(
+                              value: progress,
+                              color: Color(0xff5B46D8),
+                              backgroundColor: Color(0xff343438),
+                              borderRadius: BorderRadius.circular(10),
+                              minHeight: 6,
+                            ),
+                            SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "${bytesToMb(receivedBytes)}MB / ${bytesToMb(totalBytes)}MB",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w500
+                                  ),
+                                ),
+                                Text(
+                                  formatSpeed(displayedSpeed),
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Color(0xff503bd1),
+                                      fontWeight: FontWeight.w500
+                                  ),
+                                ),
+                                Text(
+                                  "${formatRemaining(remainingSeconds)} left",
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w500
+                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -418,11 +374,11 @@ class _HomeState extends State<Home> {
                                   }
                                 }).then((result) async {
                                   debugPrint("Media downloaded");
-                              debugPrint("Pushing file into Internal Storage");
-                              String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
-                                savePath,
-                              );
-                              setState(()=>isDownloading = false);
+                                  debugPrint("Pushing file into Internal Storage");
+                                  String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
+                                    savePath,
+                                  );
+                                  setState(()=>isDownloading = false);
                               progress=0;
                               receivedBytes=0;
                               debugPrint("Stored into Internal Storage");
