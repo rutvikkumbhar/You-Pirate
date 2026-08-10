@@ -61,21 +61,6 @@ class _HomeState extends State<Home> {
     return "${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(2)} MB/s";
   }
 
-  String formatRemaining(double seconds) {
-    if (seconds.isInfinite || seconds.isNaN) {
-      return "--";
-    }
-
-    final duration = Duration(seconds: seconds.round());
-    if (duration.inHours > 0) {
-      return "${duration.inHours}:${duration.inMinutes.remainder(60)}:${duration.inSeconds.remainder(60)}";
-    }
-    if (duration.inMinutes > 0) {
-      return "00:${duration.inMinutes}:${duration.inSeconds.remainder(60)}:";
-    }
-    return "00:00:${duration.inSeconds}";
-  }
-
   Widget build(BuildContext context) {
 
     // downloadCancelToken = CancelToken();
@@ -232,6 +217,30 @@ class _HomeState extends State<Home> {
                                       ),
                                     ),
                                   ),
+                                ),
+                                Positioned(
+                                  top: 1,
+                                  left: 0.1,
+                                  child: Transform.rotate(
+                                    angle: 50,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        borderRadius: BorderRadius.circular(5),
+                                        border: Border.all(color: Colors.orange, )
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 3,vertical: 2),
+                                        child: Center(
+                                          child: Text(videoInfo!['dynamic_range'],style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w500
+                                          ),),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 )
                               ]
                           ),
@@ -303,14 +312,6 @@ class _HomeState extends State<Home> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        "${bytesToMb(receivedBytes)}MB / ${bytesToMb(totalBytes)}MB",
-                                        style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: Colors.white70,
-                                            fontWeight: FontWeight.w500
-                                        ),
-                                      ),
-                                      Text(
                                         formatSpeed(displayedSpeed),
                                         style: GoogleFonts.poppins(
                                             fontSize: 12,
@@ -319,7 +320,7 @@ class _HomeState extends State<Home> {
                                         ),
                                       ),
                                       Text(
-                                        "${formatRemaining(remainingSeconds)} left",
+                                        "${bytesToMb(receivedBytes)}MB / ${bytesToMb(totalBytes)}MB",
                                         style: GoogleFonts.poppins(
                                             fontSize: 12,
                                             color: Colors.white70,
@@ -412,9 +413,6 @@ class _HomeState extends State<Home> {
                                       previousReceived = received;
                                       previousTime = now;
                                     }
-                                    //Remaining TIme
-                                    final remainingBytes = total - received;
-                                    remainingSeconds = remainingBytes / displayedSpeed;
                                     setState(() => {});
                                   }
                                 }).then((result) async {
@@ -794,9 +792,6 @@ class _HomeState extends State<Home> {
                 previousReceived = received;
                 previousTime = now;
               }
-              // Remaining Time
-              final remainingBytes = total - received;
-              remainingSeconds = remainingBytes / displayedSpeed;
               setState(()=>{});
             }).then((result) async {
               if(!result) {
@@ -944,7 +939,7 @@ class _HomeState extends State<Home> {
                               fontWeight: FontWeight.w500
                           ),),
                         ),
-                        Text("${size == null ? 'Unknown' : '${double.parse(bytesToMb(size))>1024?(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)+" GB":bytesToMb(size)+" MB"}'}",
+                        Text(size == null ? 'Unknown' : double.parse(bytesToMb(size))>1024?"${(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)} GB":"${bytesToMb(size)} MB",
                           style: GoogleFonts.poppins(
                               fontSize: 13,
                               color: Color(0xffB8B8BD),
