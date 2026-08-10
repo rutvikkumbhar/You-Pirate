@@ -331,34 +331,21 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 SizedBox(height: 15,),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      onTap: () async {
-                       bool isDeleted = await deleteDownloadConfirmation(data['id'].toString(), true);
-                       if(isDeleted) {
-                         Navigator.pop(context, true);
-                       }
+                    IconButton(
+                      icon: Icon(Boxicons.bxs_trash, size: 23, color: Colors.red.withValues(alpha: 0.7),),
+                      onPressed: () async {
+                        // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title'];
+                        // String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title'];
+                        // bool isVideo = data['mediaType'] == "video" ? true : false;
+                        // await shareMediaFile(context, data['filePath'] );
+                        bool isDeleted = await deleteDownloadConfirmation(data['id'].toString(), true);
+                        if(isDeleted) {
+                          Navigator.pop(context, true);
+                        }
                       },
-                      child: Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Color(0xffD90000),
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(color: Colors.transparent)
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 25),
-                          child: Center(
-                            child: Text("Delete Record", style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w500
-                            ),),
-                          ),
-                        ),
-                      ),
                     ),
                     SizedBox(width: 15,),
                     GestureDetector(
@@ -388,15 +375,28 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                       ),
                     ),
                     SizedBox(width: 15,),
-                    IconButton(
-                      icon: Icon(Boxicons.bxs_share_alt,size: 23,color: Color(0xff503bd1),),
-                      onPressed: () async {
-                        // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title'];
-                        // String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title'];
-                        // bool isVideo = data['mediaType'] == "video" ? true : false;
+                    GestureDetector(
+                      onTap: () async {
                         await shareMediaFile(context, data['filePath'] );
                       },
-                    )
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.4)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Center(
+                            child: Text("Share", style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Color(0xff503bd1),
+                                fontWeight: FontWeight.w500
+                            ),),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 )
               ],
