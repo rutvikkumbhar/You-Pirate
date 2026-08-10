@@ -32,9 +32,10 @@ class VideoServices {
     }
   }
 
-  static Future<void> downloadVideo({
+  static Future<bool> downloadVideo({
     required String url,
     required String savePath,
+    required CancelToken downloadCancelToken,
     required void Function(int recieved, int total) onProgress}) async {
     Dio dio = Dio();
     final endpoint = "$baseUrl/user/video/quickdownload";
@@ -50,23 +51,30 @@ class VideoServices {
               contentType: "application/json"
           ),
           onReceiveProgress: onProgress,
+          cancelToken: downloadCancelToken,
       );
+      return true;
     } on DioException catch(e) {
       if (e.response != null) {
         print(e.response?.statusCode);
         print(e.response?.data);
         print(e.response?.data.runtimeType);
+        return true;
+      } else if(CancelToken.isCancel(e)) {
+        print("Download Canceled");
+        return false;
       } else {
         throw "Unable to connect with Server";
       }
     }
   }
 
-  static Future<void> downloadFileById({
+  static Future<bool> downloadFileById({
     required String url,
     required String formatId,
     required String savePath,
     required bool isVideo,
+    required CancelToken downloadCancelToken,
     required void Function(int received, int total) onProgress
   }) async {
     final endPoint = isVideo ?
@@ -88,12 +96,18 @@ class VideoServices {
           contentType: "application/json"
         ),
         onReceiveProgress: onProgress,
+        cancelToken: downloadCancelToken
       );
+      return true;
     } on DioException catch(e) {
       if (e.response != null) {
         print(e.response?.statusCode);
         print(e.response?.data);
         print(e.response?.data.runtimeType);
+        return true;
+      } else if(CancelToken.isCancel(e)) {
+        print("Download Canceled");
+        return false;
       } else {
         throw "Unable to connect with Server";
       }
