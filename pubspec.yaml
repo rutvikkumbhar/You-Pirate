@@ -75,12 +75,13 @@ flutter:
     - .env
     - assets/images/download.svg
     - assets/images/no-thumbnail.png
-    - assets/Animations/loading.json
+    - assets/Animations/stream_loading.json
     - assets/Animations/chill_guy.json
     - assets/Animations/download_icon.json
     - assets/Animations/no_downloads.json
     - assets/Animations/sad.json
     - assets/Animations/delete.json
+    - assets/Animations/info_loading.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

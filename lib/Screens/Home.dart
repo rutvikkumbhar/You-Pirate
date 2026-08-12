@@ -97,7 +97,8 @@ class _HomeState extends State<Home> {
         child: ListView(
           children: [
             AnimatedContainer(
-              duration: Duration(milliseconds: 100),
+              duration: Duration(milliseconds: 180),
+              curve: Curves.easeIn,
               height: isInfoAvailable? 10: 180,
             ),
             TextField(
@@ -106,6 +107,9 @@ class _HomeState extends State<Home> {
               style: TextStyle(color: Colors.white),
               autofocus: false,
               focusNode: urlInputFocus,
+              onEditingComplete: () async {
+                await fetchMetaData();
+              },
               decoration: InputDecoration(
                 hintText: "Paste link",
                 hintStyle: TextStyle(color: Colors.white60,),
@@ -117,38 +121,7 @@ class _HomeState extends State<Home> {
                 suffixIcon: IconButton(
                   icon: Icon(Boxicons.bxs_send, color: Colors.white60,),
                   onPressed: () async {
-                    if(urlController.text.isEmpty){
-                      SnackbarServices().error(context,"Enter video link");
-                    } else if(fetchInfo){
-                      urlInputFocus.unfocus();
-                      SnackbarServices().warning(context, "Fetching video information");
-                    } else if(isDownloading) {
-                      urlInputFocus.unfocus();
-                      SnackbarServices().warning(context, "Download is in progress");
-                    } else {
-                      urlInputFocus.unfocus();
-                      setState(() => infoLoading = true);
-                      fetchInfo = true;
-                      try {
-                        VideoServices.getVideoInfo(urlController.text).then((result) => {
-                          fetchInfo = false,
-                          isInfoAvailable = true,
-                          setState(()=>infoLoading=false),
-                          videoInfo = result,
-                          formats = videoInfo?['formats'],
-                        }
-                        ).onError((error, stackTrace) =>{
-                          fetchInfo = false,
-                          isInfoAvailable = false,
-                          setState(() => infoLoading = false),
-                          SnackbarServices().error(context, error.toString()),
-                        });
-                      } catch (error) {
-                        fetchInfo = false;
-                        isInfoAvailable = false;
-                        SnackbarServices().error(context, error.toString());
-                      }
-                    }
+                    await fetchMetaData();
                     },
                 ),
                 border: OutlineInputBorder(
@@ -165,12 +138,14 @@ class _HomeState extends State<Home> {
                 ),),
             ),
             SizedBox(height: 15,),
-            infoLoading?Padding(
+            infoLoading ? Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50),
-              child: LinearProgressIndicator(),
-            ):SizedBox(),
-            if(isInfoAvailable)
-              Column(
+              child: Lottie.asset("assets/Animations/info_loading.json", height: 60),
+            ) : SizedBox(),
+            AnimatedSwitcher(
+              duration: Duration(milliseconds: 180),
+              switchInCurve: Curves.easeIn,
+              child: isInfoAvailable ? Column(
                 children: [
                   Container(
                     height: 120,
@@ -178,7 +153,6 @@ class _HomeState extends State<Home> {
                     decoration: BoxDecoration(
                         color: Color(0xff1B1B1B),
                         borderRadius: BorderRadius.circular(13),
-                        border: Border.all(color: Color(0xff6D5DF6).withValues(alpha: 0.2))
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10,vertical: 10),
@@ -193,7 +167,9 @@ class _HomeState extends State<Home> {
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(5),
                                       image: DecorationImage(
-                                          image: videoInfo?['thumbnail'] == null? AssetImage("assets/images/no-thumbnail.png"):NetworkImage(videoInfo?['thumbnail']),
+                                          image: videoInfo?['thumbnail'] == null
+                                              ? AssetImage("assets/images/no-thumbnail.png")
+                                              : NetworkImage(videoInfo?['thumbnail']),
                                           fit: BoxFit.cover)
                                   ),
                                 ),
@@ -218,30 +194,6 @@ class _HomeState extends State<Home> {
                                     ),
                                   ),
                                 ),
-                                Positioned(
-                                  top: 1,
-                                  left: 0.1,
-                                  child: Transform.rotate(
-                                    angle: 50,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(5),
-                                        border: Border.all(color: Colors.orange, )
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 3,vertical: 2),
-                                        child: Center(
-                                          child: Text(videoInfo!['dynamic_range'],style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500
-                                          ),),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                )
                               ]
                           ),
                           SizedBox(width: 11,),
@@ -257,13 +209,14 @@ class _HomeState extends State<Home> {
                                       fontWeight: FontWeight.w500),),
                                 Text("${videoInfo?['extractor'].toString().toUpperCase()} • ${videoInfo?['channel']}",
                                   style: GoogleFonts.poppins(
-                                    color: Colors.white70,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500
-                                ),),
+                                      color: Colors.white70,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500
+                                  ),
+                                ),
                               ],
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -363,8 +316,8 @@ class _HomeState extends State<Home> {
                                   },
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white12
+                                        shape: BoxShape.circle,
+                                        color: Colors.white12
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.all(6),
@@ -379,16 +332,15 @@ class _HomeState extends State<Home> {
                           ],
                         ),
                       ),
-                    )
-                        : GestureDetector(
+                    ) : GestureDetector(
                       onTap: () async {
-                        if(!isDownloading){
+                        if(!isDownloading) {
                           try {
                             isDownloading = true;
                             extension = "mp4";
                             quality = "Best";
                             progress = 0;
-                            totalBytes= 0;
+                            totalBytes = 0;
                             downloadCancelToken = CancelToken();
                             setState(() => fetchingStream = true);
                             Directory dir = await getApplicationDocumentsDirectory();
@@ -416,41 +368,40 @@ class _HomeState extends State<Home> {
                                     setState(() => {});
                                   }
                                 }).then((result) async {
-                                  if(!result) {
-                                    return;
-                                  }
-                                  debugPrint("Media downloaded");
-                                  debugPrint("Pushing file into Internal Storage");
-                                  String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
-                                    savePath,
-                                  );
-                                  setState(()=>isDownloading = false);
-                                  progress=0;
-                                  receivedBytes=0;
-                                  debugPrint("Stored into Internal Storage");
-                                  SnackbarServices().success(context, "Download Completed");
-                                  previousReceived = 0;
-                                  downloadSpeed = 0;
-
-                                  remainingSeconds = 0;
-                                  displayedSpeed = 0;
-                                  await saveToDownloadHistory(displayTitle!,true, "bv*+ba/b").then((result){
-                                    extension = "";
-                                    quality = "";
-                                    print("Data saved to local storage ");
-                                  }).onError((error, stackTrace){
-                                    print("ERROR: ${error.toString()}");
-                                  });
-                                }).onError((error, stackTrace){
-                                  setState(()=>isDownloading = false);
-                                  SnackbarServices().error(context, error.toString());
-                                  extension = "";
-                                  quality = "";
-                                  previousReceived = 0;
-                                  downloadSpeed = 0;
-                                  remainingSeconds = 0;
-                                  displayedSpeed = 0;
-                                });
+                              if(!result) {
+                                return;
+                              }
+                              debugPrint("Media downloaded");
+                              debugPrint("Pushing file into Internal Storage");
+                              String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
+                                savePath,
+                              );
+                              setState(()=>isDownloading = false);
+                              progress=0;
+                              receivedBytes=0;
+                              debugPrint("Stored into Internal Storage");
+                              SnackbarServices().success(context, "Download Completed");
+                              previousReceived = 0;
+                              downloadSpeed = 0;
+                              remainingSeconds = 0;
+                              displayedSpeed = 0;
+                              await saveToDownloadHistory(displayTitle!,true, "bv*+ba/b").then((result){
+                                extension = "";
+                                quality = "";
+                                print("Data saved to local storage ");
+                              }).onError((error, stackTrace){
+                                print("ERROR: ${error.toString()}");
+                              });
+                            }).onError((error, stackTrace){
+                              setState(()=>isDownloading = false);
+                              SnackbarServices().error(context, error.toString());
+                              extension = "";
+                              quality = "";
+                              previousReceived = 0;
+                              downloadSpeed = 0;
+                              remainingSeconds = 0;
+                              displayedSpeed = 0;
+                            });
                           } catch(error) {
                             setState(()=>isDownloading = false);
                             previousReceived = 0;
@@ -465,8 +416,10 @@ class _HomeState extends State<Home> {
                           SnackbarServices().warning(context, "Download is in process");
                         }
                       },
-                      child: Container(
-                        height: 75,
+                      child: AnimatedContainer(
+                        height: 70,
+                        duration: Duration(milliseconds: 180),
+                        curve: Curves.ease,
                         width: MediaQuery.of(context).size.width,
                         decoration: BoxDecoration(
                             color: Color(0xff523CD3),
@@ -502,17 +455,27 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 10,),
-                  fetchingStream ?
-                  Lottie.asset("assets/Animations/loading.json",height: 50,width: 50)
-                      : SizedBox(),
+                  SizedBox(height: 5,),
+                  AnimatedContainer(
+                    duration: Duration(milliseconds: 180),
+                    curve: Curves.ease,
+                    height: fetchingStream ? 50: 0,
+                    child: fetchingStream ?
+                    Lottie.asset("assets/Animations/stream_loading.json",height: 50,width: 50)
+                        : SizedBox(),
+                  ),
                   SizedBox(height: 10),
                   Container(
                     height: 55, width: MediaQuery.of(context).size.width,
                     decoration: BoxDecoration(
-                        color: Color(0xff1B1B1B),
-                        borderRadius: BorderRadius.circular(13),
-                        border: Border.all(color: Color(0xff6D5DF6).withValues(alpha: 0.2))
+                        // color: Color(0xff1B1B1B),
+                        gradient: LinearGradient(
+                            colors: [Color(0xff1B1B1B), Color(0xff111111)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter),
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(13),
+                            topRight: Radius.circular(13)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -528,20 +491,22 @@ class _HomeState extends State<Home> {
                                     color: isVideo ? Color(0xff503bd1) : Colors.transparent,
                                     borderRadius: BorderRadius.circular(5)
                                 ),
-                                child: Center(child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.videocam_rounded,size: 19,color: isVideo?Colors.white:Colors.white70,),
-                                    SizedBox(width: 10,),
-                                    Text("Video",
-                                      style: GoogleFonts.poppins(
-                                          fontSize: 13,
-                                          color: isVideo?Colors.white:Colors.white70,
-                                          fontWeight: FontWeight.w500
-                                      ),
-                                    ),
-                                  ],
-                                )),
+                                child: Center(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.videocam_rounded,size: 19,color: isVideo?Colors.white:Colors.white70,),
+                                        SizedBox(width: 10,),
+                                        Text("Video",
+                                          style: GoogleFonts.poppins(
+                                              fontSize: 13,
+                                              color: isVideo?Colors.white:Colors.white70,
+                                              fontWeight: FontWeight.w500
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                ),
                               ),
                             ),
                           ),
@@ -579,18 +544,20 @@ class _HomeState extends State<Home> {
                   ),
                   SizedBox(height: 10,),
                   AnimatedSwitcher(
-                    duration: Duration(milliseconds: 200),
-                    switchOutCurve: Curves.easeOut,
-                    switchInCurve: Curves.easeIn,
-                    child: VideoAudioQualityCard(
-                        isVideo: isVideo,
-                        downloadCancelToken: downloadCancelToken ?? CancelToken()
-                    )
+                      duration: Duration(milliseconds: 200),
+                      switchInCurve: Curves.easeIn,
+                      switchOutCurve: Curves.easeOut,
+                      child: isVideo ? VideoAudioQualityCard(
+                          isVideo: isVideo,
+                          downloadCancelToken: downloadCancelToken ?? CancelToken()
+                      ) : VideoAudioQualityCard(
+                          isVideo: isVideo,
+                          downloadCancelToken: downloadCancelToken ?? CancelToken()
+                      )
                   ),
                 ],
               )
-            else
-              Column(
+                  : Column(
                 children: [
                   Lottie.asset("assets/Animations/chill_guy.json",height: 200),
                   Text("Paste a video link",
@@ -603,41 +570,41 @@ class _HomeState extends State<Home> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                     Container(
-                       height: 110,
-                       width: 120,
-                       decoration: BoxDecoration(
-                         color: Color(0xff1B1B1B),
-                         borderRadius: BorderRadius.circular(13)
-                       ),
-                       child: Padding(
-                         padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 10),
-                         child: Column(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           crossAxisAlignment: CrossAxisAlignment.center,
-                           children: [
-                             Container(
-                               decoration: BoxDecoration(
-                                 shape: BoxShape.circle,
-                                 color: Color(0xff503bd1).withValues(alpha: 0.6),
-                               ),
-                               child: Padding(
-                                 padding: const EdgeInsets.all(7),
-                                 child: Center(
-                                   child: Icon(Boxicons.bxs_bolt,color: Colors.white,size: 22,),
-                                 ),
-                               ),
-                             ),
-                             Text("Fast Downloads", style: GoogleFonts.poppins(
-                               fontSize: 13,
-                               color: Colors.white,
-                               fontWeight: FontWeight.w500,
-                             ),
-                             textAlign: TextAlign.center,)
-                           ],
-                         ),
-                       ),
-                     ),
+                      Container(
+                        height: 110,
+                        width: 120,
+                        decoration: BoxDecoration(
+                            color: Color(0xff1B1B1B),
+                            borderRadius: BorderRadius.circular(13)
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12,horizontal: 10),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xff503bd1).withValues(alpha: 0.6),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(7),
+                                  child: Center(
+                                    child: Icon(Boxicons.bxs_bolt,color: Colors.white,size: 22,),
+                                  ),
+                                ),
+                              ),
+                              Text("Fast Downloads", style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                                textAlign: TextAlign.center,)
+                            ],
+                          ),
+                        ),
+                      ),
                       Container(
                         height: 110,
                         width: 120,
@@ -663,7 +630,7 @@ class _HomeState extends State<Home> {
                                   ),
                                 ),
                               ),
-                              Text("Multiple Video Qualities", style: GoogleFonts.poppins(
+                              Text("Multiple Quality Option", style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 color: Colors.white,
                                 fontWeight: FontWeight.w500,
@@ -694,7 +661,7 @@ class _HomeState extends State<Home> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(7),
                                   child: Center(
-                                    child: Icon(Boxicons.bxs_music,color: Colors.white,size: 22,),
+                                    child: FaIcon(FontAwesomeIcons.itunesNote,color: Colors.white,size: 20,),
                                   ),
                                 ),
                               ),
@@ -711,11 +678,47 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ],
-              )
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> fetchMetaData() async{
+    if(urlController.text.isEmpty) {
+      SnackbarServices().error(context,"Enter video link");
+    } else if(fetchInfo) {
+      urlInputFocus.unfocus();
+      SnackbarServices().warning(context, "Fetching video information");
+    } else if(isDownloading) {
+      urlInputFocus.unfocus();
+      SnackbarServices().warning(context, "Download is in progress");
+    } else {
+      urlInputFocus.unfocus();
+      setState(() => infoLoading = true);
+      fetchInfo = true;
+      try {
+        VideoServices.getVideoInfo(urlController.text).then((result) => {
+          fetchInfo = false,
+          isInfoAvailable = true,
+          setState(()=>infoLoading=false),
+          videoInfo = result,
+          formats = videoInfo?['formats'],
+        }
+        ).onError((error, stackTrace) =>{
+          fetchInfo = false,
+          isInfoAvailable = false,
+          setState(() => infoLoading = false),
+          SnackbarServices().error(context, error.toString()),
+        });
+      } catch (error) {
+        fetchInfo = false;
+        isInfoAvailable = false;
+        SnackbarServices().error(context, error.toString());
+      }
+    }
   }
 
   Future<void> saveToDownloadHistory  (String savedTitle, bool isVideo, String formatId) async {
@@ -867,9 +870,16 @@ class _HomeState extends State<Home> {
             child: Container(
               height: 50,width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
-                  color: Color(0xff1B1B1B),
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2))
+                  // color: Color(0xff1B1B1B),
+                  // borderRadius: BorderRadius.circular(13),
+                  // border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.0)),
+                gradient: LinearGradient(
+                    colors: [Color(0xff1B1B1B), Color(0xff111111)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter),
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(13),
+                    topRight: Radius.circular(13)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -953,7 +963,7 @@ class _HomeState extends State<Home> {
                         child: Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Color(0xff503bd1).withValues(alpha: 0.2)
+                              color: Color(0xff503bd1).withValues(alpha: 0.0)
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(9),

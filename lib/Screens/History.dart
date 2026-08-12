@@ -80,7 +80,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
         builder: (builder, snapshot) {
           if(snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-                child: Lottie.asset("assets/Animations/loading.json", height: 100));
+                child: Lottie.asset("assets/Animations/stream_loading.json", height: 100));
           } else if(snapshot.hasError) {
             return Center(
               child: Text("Something went wrong",
