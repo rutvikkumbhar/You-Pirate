@@ -245,7 +245,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 metaDataRow(
                     Icon(Boxicons.bx_time,color: Color(0xff503bd1),size: 20,),
-                    "Duration", data['duration'].toString().isEmpty ? data['duration'] : "NA"
+                    "Duration", data['duration'].toString().isNotEmpty ? data['duration'] : "NA"
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),

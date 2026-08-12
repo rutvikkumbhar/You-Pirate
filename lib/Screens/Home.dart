@@ -21,17 +21,17 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final urlController = TextEditingController();
   final FocusNode urlInputFocus = FocusNode();
-  final dio = Dio();
-  final path = "/storage/emulated/0/Download/";
+  // final dio = Dio();
+  // final path = "/storage/emulated/0/Download/";
   double progress = 0;
   int totalBytes = 0;
   int receivedBytes = 0;
   Map<String, dynamic>? videoInfo;
   List<dynamic>? formats;
-  bool infoLoading = false;
+  // bool infoLoading = false;
   bool isInfoAvailable = false;
   bool fetchingStream = false;
-  bool fetchInfo = false;
+  bool fetchingVideoInfo = false;
   bool isVideo = true;
   bool isDownloading = false;
   String extension = "";
@@ -61,9 +61,19 @@ class _HomeState extends State<Home> {
     return "${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(2)} MB/s";
   }
 
+  void resetValuesToDefault() {
+    progress = 0;
+    totalBytes = 0;
+    receivedBytes = 0;
+    extension = "";
+    quality = "";
+    previousReceived = 0;
+    downloadSpeed = 0;
+    remainingSeconds = 0;
+    displayedSpeed = 0;
+    return;
+  }
   Widget build(BuildContext context) {
-
-    // downloadCancelToken = CancelToken();
     return Scaffold(
       backgroundColor: Color(0xff111111),
       appBar: AppBar(title: Text("You Pirate",
@@ -138,7 +148,7 @@ class _HomeState extends State<Home> {
                 ),),
             ),
             SizedBox(height: 15,),
-            infoLoading ? Padding(
+            fetchingVideoInfo ? Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: Lottie.asset("assets/Animations/info_loading.json", height: 60),
             ) : SizedBox(),
@@ -254,7 +264,7 @@ class _HomeState extends State<Home> {
                                   ),
                                   SizedBox(height: 12),
                                   LinearProgressIndicator(
-                                    value: progress,
+                                    value: fetchingStream ? null : progress,
                                     color: Color(0xff5B46D8),
                                     backgroundColor: Color(0xff343438),
                                     borderRadius: BorderRadius.circular(10),
@@ -303,15 +313,16 @@ class _HomeState extends State<Home> {
                                       SnackbarServices().warning(context, "Wait Until Media Process!");
                                     } else {
                                       downloadCancelToken!.cancel("User Canceled Download");
-                                      isDownloading = false;
-                                      setState((){});
+                                      // isDownloading = false;
+                                      resetValuesToDefault();
+                                      setState(()=> isDownloading = false);
+                                      // previousReceived = 0;
+                                      // downloadSpeed = 0;
+                                      // extension = "";
+                                      // quality = "";
+                                      // remainingSeconds = 0;
+                                      // displayedSpeed = 0;
                                       SnackbarServices().warning(context, "Download Canceled");
-                                      previousReceived = 0;
-                                      downloadSpeed = 0;
-                                      extension = "";
-                                      quality = "";
-                                      remainingSeconds = 0;
-                                      displayedSpeed = 0;
                                     }
                                   },
                                   child: Container(
@@ -339,19 +350,21 @@ class _HomeState extends State<Home> {
                             isDownloading = true;
                             extension = "mp4";
                             quality = "Best";
-                            progress = 0;
-                            totalBytes = 0;
-                            downloadCancelToken = CancelToken();
+                            // progress = 0;
+                            // totalBytes = 0;
                             setState(() => fetchingStream = true);
                             Directory dir = await getApplicationDocumentsDirectory();
                             String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
+                            downloadCancelToken = CancelToken();
                             VideoServices.downloadVideo(
                                 url: urlController.text.toString(),
                                 savePath: savePath,
                                 downloadCancelToken: downloadCancelToken!,
                                 onProgress: (received, total) {
-                                  if (total != -1) {
+                                  if(fetchingStream) {
                                     setState(() => fetchingStream = false);
+                                  }
+                                  if (total != -1) {
                                     // Progress bar
                                     progress = received / total;
                                     totalBytes = total;
@@ -365,55 +378,63 @@ class _HomeState extends State<Home> {
                                       previousReceived = received;
                                       previousTime = now;
                                     }
-                                    setState(() => {});
+                                    setState((){});
                                   }
                                 }).then((result) async {
-                              if(!result) {
-                                return;
-                              }
-                              debugPrint("Media downloaded");
-                              debugPrint("Pushing file into Internal Storage");
-                              String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
-                                savePath,
-                              );
-                              setState(()=>isDownloading = false);
-                              progress=0;
-                              receivedBytes=0;
-                              debugPrint("Stored into Internal Storage");
-                              SnackbarServices().success(context, "Download Completed");
-                              previousReceived = 0;
-                              downloadSpeed = 0;
-                              remainingSeconds = 0;
-                              displayedSpeed = 0;
-                              await saveToDownloadHistory(displayTitle!,true, "bv*+ba/b").then((result){
-                                extension = "";
-                                quality = "";
-                                print("Data saved to local storage ");
-                              }).onError((error, stackTrace){
-                                print("ERROR: ${error.toString()}");
-                              });
-                            }).onError((error, stackTrace){
-                              setState(()=>isDownloading = false);
-                              SnackbarServices().error(context, error.toString());
-                              extension = "";
-                              quality = "";
-                              previousReceived = 0;
-                              downloadSpeed = 0;
-                              remainingSeconds = 0;
-                              displayedSpeed = 0;
-                            });
+                                  if(!result) {
+                                    resetValuesToDefault();
+                                    return;
+                                  }
+                                  debugPrint("Media downloaded");
+                                  debugPrint("Pushing file into Internal Storage");
+                                  String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
+                                    savePath,
+                                  );
+                                  setState(()=>isDownloading = false);
+
+                                  debugPrint("Stored into Internal Storage");
+                                  SnackbarServices().success(context, "Download Completed");
+                                  // progress=0;
+                                  // receivedBytes=0;
+                                  // previousReceived = 0;
+                                  // downloadSpeed = 0;
+                                  // remainingSeconds = 0;
+                                  // displayedSpeed = 0;
+                                  saveToDownloadHistory(displayTitle!,true, "bv*+ba/b").then((result){
+                                    // extension = "";
+                                    // quality = "";
+                                    resetValuesToDefault();
+                                    print("Data saved to local storage ");
+                                  }).onError((error, stackTrace){
+                                    resetValuesToDefault();
+                                    // setState(()=>isDownloading = false);
+                                    // print("ERROR: ${error.toString()}");
+                                    SnackbarServices().error(context, error.toString());
+                                  });
+                                }).onError((error, stackTrace){
+                                  resetValuesToDefault();
+                                  setState(()=>isDownloading = false);
+                                  SnackbarServices().error(context, error.toString());
+                                  // extension = "";
+                                  // quality = "";
+                                  // previousReceived = 0;
+                                  // downloadSpeed = 0;
+                                  // remainingSeconds = 0;
+                                  // displayedSpeed = 0;
+                                });
                           } catch(error) {
+                            resetValuesToDefault();
                             setState(()=>isDownloading = false);
-                            previousReceived = 0;
-                            downloadSpeed = 0;
-                            extension = "";
-                            quality = "";
-                            remainingSeconds = 0;
-                            displayedSpeed = 0;
+                            // previousReceived = 0;
+                            // downloadSpeed = 0;
+                            // extension = "";
+                            // quality = "";
+                            // remainingSeconds = 0;
+                            // displayedSpeed = 0;
                             SnackbarServices().error(context, error.toString());
                           }
                         } else {
-                          SnackbarServices().warning(context, "Download is in process");
+                          SnackbarServices().warning(context, "Download is in progress");
                         }
                       },
                       child: AnimatedContainer(
@@ -455,16 +476,16 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 5,),
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 180),
-                    curve: Curves.ease,
-                    height: fetchingStream ? 50: 0,
-                    child: fetchingStream ?
-                    Lottie.asset("assets/Animations/stream_loading.json",height: 50,width: 50)
-                        : SizedBox(),
-                  ),
-                  SizedBox(height: 10),
+                  // SizedBox(height: 5,),
+                  // AnimatedContainer(
+                  //   duration: Duration(milliseconds: 180),
+                  //   curve: Curves.ease,
+                  //   height: fetchingStream ? 50: 0,
+                  //   child: fetchingStream ?
+                  //   Lottie.asset("assets/Animations/stream_loading.json",height: 50,width: 50)
+                  //       : SizedBox(),
+                  // ),
+                  SizedBox(height: 15),
                   Container(
                     height: 55, width: MediaQuery.of(context).size.width,
                     decoration: BoxDecoration(
@@ -513,13 +534,13 @@ class _HomeState extends State<Home> {
                         ),
                         Expanded(
                           child: GestureDetector(
-                            onTap: ()=>setState(()=>isVideo=false),
+                            onTap: ()=> setState(()=> isVideo = false),
                             child: Padding(
                               padding: const EdgeInsets.only(top: 5,bottom: 5,right: 5),
                               child: AnimatedContainer(
                                 duration: Duration(milliseconds: 180),
                                 decoration: BoxDecoration(
-                                    color: isVideo?Colors.transparent:Color(0xff503bd1),
+                                    color: isVideo ? Colors.transparent : Color(0xff503bd1),
                                     borderRadius: BorderRadius.circular(5)
                                 ),
                                 child: Center(child: Row(
@@ -530,7 +551,7 @@ class _HomeState extends State<Home> {
                                     Text("Audio",
                                       style: GoogleFonts.poppins(
                                           fontSize: 13,
-                                          color: isVideo?Colors.white70:Colors.white,
+                                          color: isVideo ? Colors.white70 : Colors.white,
                                           fontWeight: FontWeight.w500
                                       ),),
                                   ],
@@ -598,8 +619,7 @@ class _HomeState extends State<Home> {
                               Text("Fast Downloads", style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
+                                fontWeight: FontWeight.w500,),
                                 textAlign: TextAlign.center,)
                             ],
                           ),
@@ -689,7 +709,7 @@ class _HomeState extends State<Home> {
   Future<void> fetchMetaData() async{
     if(urlController.text.isEmpty) {
       SnackbarServices().error(context,"Enter video link");
-    } else if(fetchInfo) {
+    } else if(fetchingVideoInfo) {
       urlInputFocus.unfocus();
       SnackbarServices().warning(context, "Fetching video information");
     } else if(isDownloading) {
@@ -697,32 +717,36 @@ class _HomeState extends State<Home> {
       SnackbarServices().warning(context, "Download is in progress");
     } else {
       urlInputFocus.unfocus();
-      setState(() => infoLoading = true);
-      fetchInfo = true;
+      setState(() => fetchingVideoInfo = true);
+      // fetchingVideoInfo = true;
       try {
         VideoServices.getVideoInfo(urlController.text).then((result) => {
-          fetchInfo = false,
+          // fetchingVideoInfo = false,
           isInfoAvailable = true,
-          setState(()=>infoLoading=false),
+          fetchingVideoInfo = false,
           videoInfo = result,
           formats = videoInfo?['formats'],
+          setState((){}),
         }
         ).onError((error, stackTrace) =>{
-          fetchInfo = false,
+          // fetchingVideoInfo = false,
           isInfoAvailable = false,
-          setState(() => infoLoading = false),
+          fetchingVideoInfo = false,
           SnackbarServices().error(context, error.toString()),
+          setState((){}),
         });
       } catch (error) {
-        fetchInfo = false;
+        // fetchingVideoInfo = false;
         isInfoAvailable = false;
+        fetchingVideoInfo = false;
         SnackbarServices().error(context, error.toString());
+        setState((){});
       }
     }
   }
 
   Future<void> saveToDownloadHistory  (String savedTitle, bool isVideo, String formatId) async {
-    print("DISPLAYED VIDEO TITLE: $savedTitle");
+    // print("DISPLAYED VIDEO TITLE: $savedTitle");
     // print("SAVED VIDEO PATH $savePath");
     String filePath;
     if(isVideo) {
@@ -732,7 +756,7 @@ class _HomeState extends State<Home> {
     }
     // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+title;
     // String audioPath = "/storage/emulated/0/Music/You Pirate/"+title;
-    print("SAVED VIDEO PATH $filePath");
+    // print("SAVED VIDEO PATH $filePath");
     try {
       await DatabaseServices().insertDownload({
         'title': videoInfo?['title'].toString(),
@@ -766,14 +790,15 @@ class _HomeState extends State<Home> {
     if(!isDownloading) {
       try {
         isDownloading = true;
-        totalBytes= 0;
-        progress = 0;
+        // totalBytes= 0;
+        // progress = 0;
         extension = isVideo ? "mp4" : "m4a";
         this.quality = quality;
         // qualityVideoCancelToken = CancelToken();
         setState(() => fetchingStream = true);
         Directory dir = await getApplicationDocumentsDirectory();
         String savePath = "${dir.path}/${videoInfo?['title']}.$extension";
+        downloadCancelToken = CancelToken();
         VideoServices.downloadFileById(
             url: url,
             formatId: formatID,
@@ -781,71 +806,81 @@ class _HomeState extends State<Home> {
             isVideo: isVideo,
             downloadCancelToken: downloadCancelToken,
             onProgress: (received, total) {
-              setState(() => fetchingStream = false);
-              // Progress bar
-              receivedBytes = received;
-              totalBytes = total;
-              progress = receivedBytes / totalBytes;
-              // Download Speed
-              final now = DateTime.now();
-              final elapsed = now.difference(previousTime).inMilliseconds / 1000;
-              if (elapsed >= 1000) {
-                final currentSpeed = (received - previousReceived) / (elapsed / 1000);
-                displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
-                previousReceived = received;
-                previousTime = now;
+              if(fetchingStream) {
+                setState(() => fetchingStream = false);
               }
-              setState(()=>{});
+              if(total != -1) {
+                // Progress bar
+                receivedBytes = received;
+                totalBytes = total;
+                progress = received / total;
+                // Download Speed
+                final now = DateTime.now();
+                final elapsed = now.difference(previousTime).inMilliseconds / 1000;
+                if (elapsed >= 1000) {
+                  final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                  displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
+                  previousReceived = received;
+                  previousTime = now;
+                }
+                setState((){});
+              }
             }).then((result) async {
               if(!result) {
+                resetValuesToDefault();
                 return;
               }
               debugPrint("Media downloaded");
               debugPrint("Pushing file into Internal Storage");
               // await MediaStorePlusServices.pushVideoToInternal(savePath),
-          String? displayTitle;
-          if(isVideo) {
-            displayTitle = await MediaStorePlusServices.pushVideoToInternal(savePath);
-          } else {
-            displayTitle =
-            await MediaStorePlusServices.pushAudioToInternal(savePath);
-          }
-          setState(()=>isDownloading = false);
-          progress =0;
-          receivedBytes=0;
-          print("Download Completed");
-          SnackbarServices().success(context, "Download Completed");
-          await saveToDownloadHistory(displayTitle!, isVideo, formatID).then((result){
-            print("Data saved to local storage ");
-          }).onError((error, stackTrace){
-            print("ERROR: ${error.toString()}");
-          });
-          totalBytes = 0;
-          extension = "";
-          quality = "";
-          previousReceived = 0;
-          downloadSpeed = 0;
-          remainingSeconds = 0;
-          displayedSpeed = 0;
+              String? displayTitle;
+              if(isVideo) {
+                displayTitle = await MediaStorePlusServices.pushVideoToInternal(savePath);
+              } else {
+                displayTitle = await MediaStorePlusServices.pushAudioToInternal(savePath);
+              }
+              setState(()=>isDownloading = false);
+              // progress =0;
+              // receivedBytes=0;
+              print("Download Completed");
+              SnackbarServices().success(context, "Download Completed");
+              saveToDownloadHistory(displayTitle!, isVideo, formatID).then((result){
+                resetValuesToDefault();
+                print("Data saved to local storage ");
+              }).onError((error, stackTrace){
+                resetValuesToDefault();
+                // print("ERROR: ${error.toString()}");
+                SnackbarServices().error(context, error.toString());
+                // setState(()=>isDownloading = false);
+              });
+              // totalBytes = 0;
+              // extension = "";
+              // quality = "";
+              // previousReceived = 0;
+              // downloadSpeed = 0;
+              // remainingSeconds = 0;
+              // displayedSpeed = 0;
         }).onError((error, stackTrace){
-          setState(()=>isDownloading = false);
+          resetValuesToDefault();
           SnackbarServices().error(context, error.toString());
-          extension = "";
-          quality = "";
-          previousReceived = 0;
-          downloadSpeed = 0;
-          remainingSeconds = 0;
-          displayedSpeed = 0;
+          setState(()=>isDownloading = false);
+          // extension = "";
+          // quality = "";
+          // previousReceived = 0;
+          // downloadSpeed = 0;
+          // remainingSeconds = 0;
+          // displayedSpeed = 0;
         });
       } catch(error) {
+        resetValuesToDefault();
         SnackbarServices().error(context, error.toString());
         setState(()=>isDownloading = false);
-        extension = "";
-        quality = "";
-        previousReceived = 0;
-        downloadSpeed = 0;
-        remainingSeconds = 0;
-        displayedSpeed = 0;
+        // extension = "";
+        // quality = "";
+        // previousReceived = 0;
+        // downloadSpeed = 0;
+        // remainingSeconds = 0;
+        // displayedSpeed = 0;
       }
     } else {
       SnackbarServices().warning(context, "Download is in process");
@@ -856,16 +891,15 @@ class _HomeState extends State<Home> {
     required bool isVideo,
     required CancelToken downloadCancelToken
   }) {
-    // CancelToken qualityFileCancelToken;
     return SizedBox(
-      height: 350, width: MediaQuery.of(context).size.width,
+      height: 400, width: MediaQuery.of(context).size.width,
       child: ListView.builder(
         itemCount: formats?.length,
         itemBuilder: (context,index){
           final data = formats?[index] as Map<String, dynamic>?;
           final size = data?['filesize'];
 
-          return (data?['ext']== (isVideo ? "mp4" : "m4a") && (isVideo ? ((data?['vbr'] ?? 0) as num).toInt()>0 : true)) ? Padding(
+          return (data?['ext'] == (isVideo ? "mp4" : "m4a") && (isVideo ? ((data?['vbr'] ?? 0) as num).toInt()>0 : true)) ? Padding(
             padding: const EdgeInsets.only(bottom: 5),
             child: Container(
               height: 50,width: MediaQuery.of(context).size.width,
@@ -949,7 +983,7 @@ class _HomeState extends State<Home> {
                               fontWeight: FontWeight.w500
                           ),),
                         ),
-                        Text(size == null ? 'Unknown' : double.parse(bytesToMb(size))>1024?"${(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)} GB":"${bytesToMb(size)} MB",
+                        Text(size == null ? 'NA' : double.parse(bytesToMb(size))>1024?"${(double.parse(bytesToMb(size))/1024).toStringAsFixed(2)} GB":"${bytesToMb(size)} MB",
                           style: GoogleFonts.poppins(
                               fontSize: 13,
                               color: Color(0xffB8B8BD),
