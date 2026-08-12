@@ -42,7 +42,7 @@ class _HomeState extends State<Home> {
   double remainingSeconds = 0;
   double displayedSpeed = 0;
   CancelToken? downloadCancelToken;
-
+  bool isLive = false;
   String bytesToMb(int bytes) {
     return (bytes / (1024 * 1024)).toStringAsFixed(2);
   }
@@ -121,15 +121,16 @@ class _HomeState extends State<Home> {
                 await fetchMetaData();
               },
               decoration: InputDecoration(
-                hintText: "Paste link",
-                hintStyle: TextStyle(color: Colors.white60,),
+                hintText: "Paste video URL here...",
+                hintStyle: GoogleFonts.poppins(color: Colors.white60, fontSize: 13),
                 filled: true,
                 fillColor: Color(0xff1B1B1B),
                 prefixIcon: Icon(
                   Boxicons.bx_link,
-                  color: Colors.white60,),
+                  color: Colors.white60,
+                size: 22,),
                 suffixIcon: IconButton(
-                  icon: Icon(Boxicons.bxs_send, color: Colors.white60,),
+                  icon: Icon(Boxicons.bxs_send, color: Colors.white60, size: 22,),
                   onPressed: () async {
                     await fetchMetaData();
                     },
@@ -187,13 +188,16 @@ class _HomeState extends State<Home> {
                                   bottom: 1,right: 1,
                                   child: Container(
                                     decoration: BoxDecoration(
-                                        color: Colors.black45,
-                                        borderRadius: BorderRadius.circular(5)
+                                        color: (videoInfo!['is_live'] !=null && videoInfo!['is_live']==true)
+                                            ? Colors.red : Colors.black45,
+                                        borderRadius: BorderRadius.circular(4)
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 5),
                                       child: Center(
-                                        child: Text("${videoInfo?['duration_string'] ?? "NA"}",
+                                        child: Text((videoInfo!['is_live'] !=null && videoInfo!['is_live']==true)
+                                            ? "LIVE"
+                                            : "${videoInfo?['duration_string'] ?? "NA"}",
                                           style: GoogleFonts.poppins(
                                               fontSize: 13,
                                               color: Colors.white,
@@ -345,6 +349,10 @@ class _HomeState extends State<Home> {
                       ),
                     ) : GestureDetector(
                       onTap: () async {
+                        if((videoInfo!['is_live'] != null && videoInfo!['is_live']==true)) {
+                          SnackbarServices().error(context, "Live streams can't be downloaded");
+                          return;
+                        }
                         if(!isDownloading) {
                           try {
                             isDownloading = true;
@@ -447,29 +455,30 @@ class _HomeState extends State<Home> {
                             borderRadius: BorderRadius.circular(13)
                         ),
                         child: Center(
-                          child: Column(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Row(
+                              Icon(Boxicons.bxs_bolt, color: Colors.white,size: 20,),
+                              SizedBox(width: 15),
+                              Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Icon(Boxicons.bxs_bolt, color: Colors.white,size: 18,),
-                                  SizedBox(width: 13,),
                                   Text("Quick Download",
                                     style: GoogleFonts.poppins(
                                         fontSize: 19,
                                         color: Colors.white,
                                         fontWeight: FontWeight.w600
-                                    ),)
+                                    ),),
+                                  Text("Best Quality (Video + Audio)",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        color: Colors.white70,
+                                        fontWeight: FontWeight.w500
+                                    ),),
                                 ],
                               ),
-                              Text("Best Quality (Video + Audio)",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 11,
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w500
-                                ),),
                             ],
                           ),
                         ),
@@ -521,7 +530,7 @@ class _HomeState extends State<Home> {
                                         Text("Video",
                                           style: GoogleFonts.poppins(
                                               fontSize: 13,
-                                              color: isVideo?Colors.white:Colors.white70,
+                                              color: isVideo ? Colors.white : Colors.white70,
                                               fontWeight: FontWeight.w500
                                           ),
                                         ),
@@ -564,17 +573,35 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   SizedBox(height: 10,),
-                  AnimatedSwitcher(
-                      duration: Duration(milliseconds: 200),
-                      switchInCurve: Curves.easeIn,
-                      switchOutCurve: Curves.easeOut,
-                      child: isVideo ? VideoAudioQualityCard(
-                          isVideo: isVideo,
-                          downloadCancelToken: downloadCancelToken ?? CancelToken()
-                      ) : VideoAudioQualityCard(
-                          isVideo: isVideo,
-                          downloadCancelToken: downloadCancelToken ?? CancelToken()
+                  (videoInfo!['is_live'] !=null && videoInfo!['is_live']==true) ?
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Lottie.asset("assets/Animations/live_stream.json", height: 170),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        child: Text("Live streams can't be downloaded. Try again after it ends",
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500
+                        ),
+                        textAlign: TextAlign.center,),
                       )
+                    ],
+                  )
+                      : AnimatedSwitcher(
+                          duration: Duration(milliseconds: 200),
+                          switchInCurve: Curves.easeIn,
+                          switchOutCurve: Curves.easeOut,
+                          child: isVideo ? VideoAudioQualityCard(
+                              isVideo: isVideo,
+                              downloadCancelToken: downloadCancelToken ?? CancelToken()
+                          ) : VideoAudioQualityCard(
+                              isVideo: isVideo,
+                              downloadCancelToken: downloadCancelToken ?? CancelToken()
+                          )
                   ),
                 ],
               )
@@ -609,9 +636,9 @@ class _HomeState extends State<Home> {
                                   shape: BoxShape.circle,
                                   color: Color(0xff503bd1).withValues(alpha: 0.6),
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(7),
-                                  child: Center(
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 7,left: 8,right: 6,bottom: 7),
                                     child: Icon(Boxicons.bxs_bolt,color: Colors.white,size: 22,),
                                   ),
                                 ),
@@ -646,16 +673,21 @@ class _HomeState extends State<Home> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(7),
                                   child: Center(
-                                    child: Icon(Boxicons.bxs_film,color: Colors.white,size: 22,),
+                                    child: Icon(Boxicons.bxs_film,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
                                   ),
                                 ),
                               ),
-                              Text("Multiple Quality Option", style: GoogleFonts.poppins(
-                                fontSize: 13,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                                textAlign: TextAlign.center,)
+                              Text("Multiple Quality Option",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              )
                             ],
                           ),
                         ),
@@ -932,7 +964,9 @@ class _HomeState extends State<Home> {
                               borderRadius: BorderRadius.circular(5)
                           ),
                           child: Center(
-                            child: Text("${data?['format_note'] ?? "NA"}",
+                            child: Text( isVideo
+                                ? "${data?['resolution'].toString().split("x")[1] ?? "NA"}p"
+                                : "${data?['format_note'] ?? "NA"}",
                               style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color: Color(0xff9F8DF0),
@@ -1013,7 +1047,9 @@ class _HomeState extends State<Home> {
                             formatID: data?['format_id'],
                             isVideo: isVideo,
                             downloadCancelToken: downloadCancelToken,
-                            quality: "${data?['format_note']}");
+                            quality: isVideo
+                                ? "${data?['resolution'].toString().split("x")[1] ?? "NA"}p"
+                                : "${data?['format_note'] ?? "NA"}");
                       },
                     )
                   ],

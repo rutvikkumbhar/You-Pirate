@@ -82,6 +82,7 @@ flutter:
     - assets/Animations/sad.json
     - assets/Animations/delete.json
     - assets/Animations/info_loading.json
+    - assets/Animations/live_stream.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
