@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,7 +47,8 @@ class _DownloadHistoryState extends State<DownloadHistory> {
     return Scaffold(
       backgroundColor: Color(0xff111111),
       appBar: AppBar(
-        backgroundColor: Color(0xff111111),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         title: Text("Download History",
         style: GoogleFonts.poppins(
           fontSize: 17,
@@ -420,13 +422,21 @@ class _DownloadHistoryState extends State<DownloadHistory> {
           child: Container(
               height: 75,width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
-                  color: Color(0xff1B1B1B),
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2),),
+                  // color: Color(0xff1B1B1B),
+                  // borderRadius: BorderRadius.circular(13),
+                  // border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2),),
+                gradient: LinearGradient(
+                    colors: [Color(0xff1B1B1B), Color(0xff111111)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter),
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(13),
+                    topRight: Radius.circular(13)),
               ),
               child:Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                child: Row(mainAxisAlignment: MainAxisAlignment.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
