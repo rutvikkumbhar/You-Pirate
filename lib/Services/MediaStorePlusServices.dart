@@ -6,14 +6,17 @@ class MediaStorePlusServices {
     try {
       final result = await mediaStore.saveFile(
           tempFilePath: tempPath,
-          dirType:DirType.video,
-          dirName: DirName.dcim);
+          dirType: DirType.video,
+          dirName: DirName.dcim,
+      );
+
       if(result != null) {
         print(result.saveStatus);
         print(result.isSuccessful);
         print(result.uri);
         print(result.name);
       }
+
       return result?.name;
     } catch(error){
       throw Exception(error.toString());

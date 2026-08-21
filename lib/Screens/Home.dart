@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -27,6 +28,7 @@ class _HomeState extends State<Home> {
   int totalBytes = 0;
   int receivedBytes = 0;
   Map<String, dynamic>? videoInfo;
+  Map<String, dynamic>? error;
   List<dynamic>? formats;
   // bool infoLoading = false;
   bool isInfoAvailable = false;
@@ -421,8 +423,10 @@ class _HomeState extends State<Home> {
                                   });
                                 }).onError((error, stackTrace){
                                   resetValuesToDefault();
+                                  this.error = error as Map<String, dynamic>;
+                                  SnackbarServices().error(context, this.error!['message']);
+                                  // SnackbarServices().error(context, error.toString());
                                   setState(()=>isDownloading = false);
-                                  SnackbarServices().error(context, error.toString());
                                   // extension = "";
                                   // quality = "";
                                   // previousReceived = 0;
@@ -432,7 +436,6 @@ class _HomeState extends State<Home> {
                                 });
                           } catch(error) {
                             resetValuesToDefault();
-                            setState(()=>isDownloading = false);
                             // previousReceived = 0;
                             // downloadSpeed = 0;
                             // extension = "";
@@ -440,6 +443,7 @@ class _HomeState extends State<Home> {
                             // remainingSeconds = 0;
                             // displayedSpeed = 0;
                             SnackbarServices().error(context, error.toString());
+                            setState(()=>isDownloading = false);
                           }
                         } else {
                           SnackbarServices().warning(context, "Download is in progress");
@@ -739,6 +743,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> fetchMetaData() async{
+
     if(urlController.text.isEmpty) {
       SnackbarServices().error(context,"Enter video link");
     } else if(fetchingVideoInfo) {
@@ -760,11 +765,13 @@ class _HomeState extends State<Home> {
           formats = videoInfo?['formats'],
           setState((){}),
         }
-        ).onError((error, stackTrace) =>{
+        ).onError((error, stackTrace) => {
           // fetchingVideoInfo = false,
           isInfoAvailable = false,
           fetchingVideoInfo = false,
-          SnackbarServices().error(context, error.toString()),
+          this.error = error as Map<String, dynamic>,
+          // this.error = this.error!['message'].toString().split('\n').firstWhere((line)=> line.startsWith("ERROR:"), orElse: () => "").replaceFirst("ERROR:", "").trim(),
+          SnackbarServices().error(context, this.error!['message']),
           setState((){}),
         });
       } catch (error) {
@@ -782,9 +789,9 @@ class _HomeState extends State<Home> {
     // print("SAVED VIDEO PATH $savePath");
     String filePath;
     if(isVideo) {
-      filePath = "/storage/emulated/0/DCIM/You Pirate/"+savedTitle;
+      filePath = "/storage/emulated/0/DCIM/You Pirate/$savedTitle";
     } else {
-      filePath = "/storage/emulated/0/Music/You Pirate/"+savedTitle;
+      filePath = "/storage/emulated/0/Music/You Pirate/$savedTitle";
     }
     // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+title;
     // String audioPath = "/storage/emulated/0/Music/You Pirate/"+title;
@@ -894,7 +901,8 @@ class _HomeState extends State<Home> {
               // displayedSpeed = 0;
         }).onError((error, stackTrace){
           resetValuesToDefault();
-          SnackbarServices().error(context, error.toString());
+          this.error = error as Map<String, dynamic>;
+          SnackbarServices().error(context, this.error!['message']);
           setState(()=>isDownloading = false);
           // extension = "";
           // quality = "";

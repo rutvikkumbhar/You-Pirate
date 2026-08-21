@@ -101,11 +101,12 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 children: [
                   Lottie.asset("assets/Animations/no_downloads.json", height: 100),
                   Text("No Downloads Yet!",
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500
-                  ),),
+                    style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500
+                    ),
+                  ),
                 ],
               ),
             );

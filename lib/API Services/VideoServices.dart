@@ -20,15 +20,18 @@ class VideoServices {
             "url": url,
           })
       );
-      if(response.statusCode==200){
+      if(response.statusCode == 200){
         return jsonDecode(response.body);
-      } else if(response.statusCode==400){
-        throw Exception(response.body);
+      } else if(response.statusCode == 400){
+        throw jsonDecode(response.body);
       } else {
-        throw Exception(response.body);
+        throw {
+          'success': false,
+          'message': "Unable to connect with Server"
+        };
       }
     } catch(error) {
-      throw "Unable to connect with Server";
+      rethrow;
     }
   }
 
@@ -63,8 +66,13 @@ class VideoServices {
       } else if(CancelToken.isCancel(e)) {
         print("Download Canceled");
         return false;
+      } else if(e.response!.statusCode == 400) {
+        throw jsonDecode(e.response!.data);
       } else {
-        throw "Unable to connect with Server";
+        throw {
+          'success': false,
+          'message': "Unable to connect with Server"
+        };
       }
     }
   }
@@ -108,8 +116,13 @@ class VideoServices {
       } else if(CancelToken.isCancel(e)) {
         print("Download Canceled");
         return false;
-      } else {
-        throw "Unable to connect with Server";
+      } else if(e.response!.statusCode == 400) {
+        throw jsonDecode(e.response!.data);
+      } else  {
+        throw {
+          'success': false,
+          'message': "Unable to connect with Server"
+        };
       }
     }
   }
