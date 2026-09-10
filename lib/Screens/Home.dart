@@ -13,6 +13,9 @@ import 'package:you_pirate_app/Screens/History.dart';
 import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
 import 'package:you_pirate_app/Services/SnackbarServices.dart';
 import 'package:you_pirate_app/Database/database_services.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'dart:async';
+import 'package:share_handler/share_handler.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -45,6 +48,8 @@ class _HomeState extends State<Home> {
   double displayedSpeed = 0;
   CancelToken? downloadCancelToken;
   bool isLive = false;
+  StreamSubscription<SharedMedia>? sharedMediaSubscription;
+
   String bytesToMb(int bytes) {
     return (bytes / (1024 * 1024)).toStringAsFixed(2);
   }
@@ -61,6 +66,33 @@ class _HomeState extends State<Home> {
       return "${(bytesPerSecond / 1024).toStringAsFixed(1)} KB/s";
     }
     return "${(bytesPerSecond / (1024 * 1024)).toStringAsFixed(2)} MB/s";
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initShareHandler();
+  }
+
+  Future<void> initShareHandler() async {
+    final handler = ShareHandlerPlatform.instance;
+    final media = await handler.getInitialSharedMedia();
+    if(media != null) {
+      handleSharedMedia(media);
+    }
+    sharedMediaSubscription = handler.sharedMediaStream.listen(handleSharedMedia);
+  }
+
+  Future<void> handleSharedMedia(SharedMedia media) async {
+    final text = media.content;
+    if(text==null || text.isEmpty) return;
+    urlController.text = text;
+    await fetchMetaData();
+  }
+  @override
+  void dispose() {
+    sharedMediaSubscription?.cancel();
+    super.dispose();
   }
 
   void resetValuesToDefault() {
@@ -111,7 +143,7 @@ class _HomeState extends State<Home> {
             AnimatedContainer(
               duration: Duration(milliseconds: 180),
               curve: Curves.easeIn,
-              height: isInfoAvailable? 10: 180,
+              height: isInfoAvailable ? 10: 180,
             ),
             TextField(
               keyboardType: TextInputType.url,
@@ -151,7 +183,7 @@ class _HomeState extends State<Home> {
                 ),),
             ),
             SizedBox(height: 15,),
-            fetchingVideoInfo ? Padding(
+            fetchingVideoInfo ?  Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: Lottie.asset("assets/Animations/info_loading.json", height: 60),
             ) : SizedBox(),
@@ -979,7 +1011,7 @@ class _HomeState extends State<Home> {
                           ),
                           child: Center(
                             child: Text( isVideo
-                                ? "${data?['resolution'].toString().split("x")[1] ?? "NA"}p"
+                                ? "${data?['format_note'].toString().split("x")[1] ?? "NA"}p"
                                 : "${data?['format_note'] ?? "NA"}",
                               style: GoogleFonts.poppins(
                                   fontSize: 13,

@@ -301,35 +301,74 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     "Original URL", ""
                 ),
                 SizedBox(height: 5,),
-                TextField(
-                  readOnly: true ,
-                  decoration: InputDecoration(
-                    hintText: data['sourceUrl'],
-                    hintStyle: GoogleFonts.poppins(
-                      color: Colors.white70,
-                      fontSize: 12
+                // TextField(
+                //   readOnly: true ,
+                //   decoration: InputDecoration(
+                //     hintText: data['sourceUrl'],
+                //     hintStyle: GoogleFonts.poppins(
+                //       color: Colors.white70,
+                //       fontSize: 12
+                //     ),
+                //     filled: true,
+                //     enabled: true,
+                //     fillColor: Color(0xff111111),
+                //     contentPadding: EdgeInsets.symmetric(vertical: 5,horizontal: 10),
+                //     border: OutlineInputBorder(
+                //       borderRadius: BorderRadius.circular(16),
+                //       borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,),
+                //     ),
+                //     enabledBorder: OutlineInputBorder(
+                //         borderRadius: BorderRadius.circular(16),
+                //         borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
+                //     ),
+                //     focusedBorder: OutlineInputBorder(
+                //         borderRadius: BorderRadius.circular(16),
+                //         borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
+                //     ),
+                //     suffixIcon: IconButton(
+                //       icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),size: 21,),
+                //       onPressed: () {
+                //         Clipboard.setData(ClipboardData(text: data['sourceUrl'].toString()));
+                //       },
+                //     )
+                //   ),
+                // ),
+                Container(
+                  height: 45, width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                    colors: [Color(0xff111111), Color(0xff1B1B1B)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      bottomLeft: Radius.circular(14)
                     ),
-                    filled: true,
-                    fillColor: Color(0xff111111),
-                    contentPadding: EdgeInsets.symmetric(vertical: 5,horizontal: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
-                    ),
-                    suffixIcon: IconButton(
-                      icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),size: 21,),
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: data['sourceUrl'].toString()));
-                      },
-                    )
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Text(data['sourceUrl'],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                  color: Colors.white70,
+                                  fontSize: 12
+                              ),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),size: 21,),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: data['sourceUrl'].toString()));
+                        },
+                      )
+                    ],
                   ),
                 ),
                 SizedBox(height: 15,),
