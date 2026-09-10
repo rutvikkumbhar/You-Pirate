@@ -75,6 +75,9 @@ class VideoServices {
         if (e.response!.statusCode == 400) {
           throw e.response!.data;
         }
+        if(e.response!.statusCode == 500) {
+          throw e.response!.data;
+        }
         throw {
           'success': false,
           'message': "Server returned an error"
@@ -140,6 +143,9 @@ class VideoServices {
         print(e.response!.statusCode);
         print(e.response!.data);
         if (e.response!.statusCode == 400) {
+          throw e.response!.data;
+        }
+        if(e.response!.statusCode == 500) {
           throw e.response!.data;
         }
         throw {

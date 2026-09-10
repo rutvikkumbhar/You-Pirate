@@ -110,7 +110,8 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff111111),
-      appBar: AppBar(title: Text("You Pirate",
+      appBar: AppBar(
+        title: Text("You Pirate",
           style: GoogleFonts.akayaTelivigala(
             textStyle: const TextStyle(
                 fontSize: 24,
@@ -976,7 +977,7 @@ class _HomeState extends State<Home> {
         itemBuilder: (context,index){
           final data = formats?[index] as Map<String, dynamic>?;
           final size = data?['filesize'];
-
+          // print("total format length: ${formats?.length.toString()}");
           return (data?['ext'] == (isVideo ? "mp4" : "m4a") && (isVideo ? ((data?['vbr'] ?? 0) as num).toInt()>0 : true)) ? Padding(
             padding: const EdgeInsets.only(bottom: 5),
             child: Container(
@@ -1011,7 +1012,7 @@ class _HomeState extends State<Home> {
                           ),
                           child: Center(
                             child: Text( isVideo
-                                ? "${data?['format_note'].toString().split("x")[1] ?? "NA"}p"
+                                ? "${data?['resolution'].toString().split("x")[1] ?? "NA"}p"
                                 : "${data?['format_note'] ?? "NA"}",
                               style: GoogleFonts.poppins(
                                   fontSize: 13,

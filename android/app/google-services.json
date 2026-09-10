@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "916501827123",
+    "project_id": "you-pirate",
+    "storage_bucket": "you-pirate.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:916501827123:android:5d79d1be1a5be0d5681d46",
+        "android_client_info": {
+          "package_name": "com.youpirate.you_pirate_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAy2hCa0JtlGT6a219lN02fqLinXx3e3IE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
