@@ -24,14 +24,21 @@ class VideoServices {
         return jsonDecode(response.body);
       } else if(response.statusCode == 400){
         throw jsonDecode(response.body);
-      } else {
+      } else{
         throw {
           'success': false,
-          'message': "Unable to connect with Server"
+          'message': "Unable To Connect With Server"
         };
       }
     } catch(error) {
-      rethrow;
+      if(error is http.ClientException) {
+        throw {
+          'success': false,
+          'message': "Unable To Connect With Server"
+        };
+      } else {
+        rethrow;
+      }
     }
   }
 
@@ -58,22 +65,39 @@ class VideoServices {
       );
       return true;
     } on DioException catch(e) {
-      if (e.response != null) {
-        print(e.response?.statusCode);
-        print(e.response?.data);
-        print(e.response?.data.runtimeType);
-        return true;
-      } else if(CancelToken.isCancel(e)) {
+      if(CancelToken.isCancel(e)) {
         print("Download Canceled");
         return false;
-      } else if(e.response!.statusCode == 400) {
-        throw jsonDecode(e.response!.data);
-      } else {
+      }
+      if (e.response != null) {
+        print(e.response!.statusCode);
+        print(e.response!.data);
+        if (e.response!.statusCode == 400) {
+          throw e.response!.data;
+        }
         throw {
           'success': false,
-          'message': "Unable to connect with Server"
+          'message': "Server returned an error"
         };
       }
+      throw {
+        'success': false,
+        'message': "Unable to connect with Server"
+      };
+
+     // if (e.response != null) {
+     //    print(e.response?.statusCode);
+     //    print(e.response?.data);
+     //    print(e.response?.data.runtimeType);
+     //    return true;
+     //  } else if(e.response!.statusCode == 400) {
+     //    throw jsonDecode(e.response!.data);
+     //  } else {
+     //    throw {
+     //      'success': false,
+     //      'message': "Unable to connect with Server"
+     //    };
+     //  }
     }
   }
 
@@ -108,22 +132,41 @@ class VideoServices {
       );
       return true;
     } on DioException catch(e) {
-      if (e.response != null) {
-        print(e.response?.statusCode);
-        print(e.response?.data);
-        print(e.response?.data.runtimeType);
-        return true;
-      } else if(CancelToken.isCancel(e)) {
+      if(CancelToken.isCancel(e)) {
         print("Download Canceled");
         return false;
-      } else if(e.response!.statusCode == 400) {
-        throw jsonDecode(e.response!.data);
-      } else  {
+      }
+      if (e.response != null) {
+        print(e.response!.statusCode);
+        print(e.response!.data);
+        if (e.response!.statusCode == 400) {
+          throw e.response!.data;
+        }
         throw {
           'success': false,
-          'message': "Unable to connect with Server"
+          'message': "Server returned an error"
         };
       }
+      throw {
+        'success': false,
+        'message': "Unable to connect with Server"
+      };
+      // if (e.response != null) {
+      //   print(e.response?.statusCode);
+      //   print(e.response?.data);
+      //   print(e.response?.data.runtimeType);
+      //   return true;
+      // } else if(CancelToken.isCancel(e)) {
+      //   print("Download Canceled");
+      //   return false;
+      // } else if(e.response!.statusCode == 400) {
+      //   throw jsonDecode(e.response!.data);
+      // } else  {
+      //   throw {
+      //     'success': false,
+      //     'message': "Unable to connect with Server"
+      //   };
+      // }
     }
   }
 }

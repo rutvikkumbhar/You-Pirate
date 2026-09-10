@@ -356,7 +356,6 @@ class _HomeState extends State<Home> {
                           return;
                         }
                         if(!isDownloading) {
-                          try {
                             isDownloading = true;
                             extension = "mp4";
                             quality = "Best";
@@ -424,7 +423,10 @@ class _HomeState extends State<Home> {
                                 }).onError((error, stackTrace){
                                   resetValuesToDefault();
                                   this.error = error as Map<String, dynamic>;
-                                  SnackbarServices().error(context, this.error!['message']);
+                                  SnackbarServices().error(
+                                      context,
+                                      this.error!['message'] ?? "Something went wrong"
+                                  );
                                   // SnackbarServices().error(context, error.toString());
                                   setState(()=>isDownloading = false);
                                   // extension = "";
@@ -434,18 +436,20 @@ class _HomeState extends State<Home> {
                                   // remainingSeconds = 0;
                                   // displayedSpeed = 0;
                                 });
-                          } catch(error) {
-                            resetValuesToDefault();
-                            // previousReceived = 0;
-                            // downloadSpeed = 0;
-                            // extension = "";
-                            // quality = "";
-                            // remainingSeconds = 0;
-                            // displayedSpeed = 0;
-                            SnackbarServices().error(context, error.toString());
-                            setState(()=>isDownloading = false);
                           }
-                        } else {
+                        // catch(error) {
+                        //     resetValuesToDefault();
+                        //     // previousReceived = 0;
+                        //     // downloadSpeed = 0;
+                        //     // extension = "";
+                        //     // quality = "";
+                        //     // remainingSeconds = 0;
+                        //     // displayedSpeed = 0;
+                        //     SnackbarServices().error(context, error.toString());
+                        //     setState(()=>isDownloading = false);
+                        //   }
+                        // }
+                        else {
                           SnackbarServices().warning(context, "Download is in progress");
                         }
                       },
@@ -827,7 +831,7 @@ class _HomeState extends State<Home> {
     required CancelToken downloadCancelToken,
   }) async {
     if(!isDownloading) {
-      try {
+      // try {
         isDownloading = true;
         // totalBytes= 0;
         // progress = 0;
@@ -911,18 +915,20 @@ class _HomeState extends State<Home> {
           // remainingSeconds = 0;
           // displayedSpeed = 0;
         });
-      } catch(error) {
-        resetValuesToDefault();
-        SnackbarServices().error(context, error.toString());
-        setState(()=>isDownloading = false);
-        // extension = "";
-        // quality = "";
-        // previousReceived = 0;
-        // downloadSpeed = 0;
-        // remainingSeconds = 0;
-        // displayedSpeed = 0;
       }
-    } else {
+    // catch(error) {
+    //     resetValuesToDefault();
+    //     SnackbarServices().error(context, error.toString());
+    //     setState(()=>isDownloading = false);
+    //     // extension = "";
+    //     // quality = "";
+    //     // previousReceived = 0;
+    //     // downloadSpeed = 0;
+    //     // remainingSeconds = 0;
+    //     // displayedSpeed = 0;
+    //   }
+    // }
+    else {
       SnackbarServices().warning(context, "Download is in process");
     }
   }
