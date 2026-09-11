@@ -77,14 +77,11 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - .env
-    - assets/images/download.svg
     - assets/images/no-thumbnail.png
     - assets/images/app-logo.png
-    - assets/Animations/stream_loading.json
+    - assets/images/update-logo.png
     - assets/Animations/chill_guy.json
-    - assets/Animations/download_icon.json
     - assets/Animations/no_downloads.json
-    - assets/Animations/sad.json
     - assets/Animations/delete.json
     - assets/Animations/info_loading.json
     - assets/Animations/live_stream.json

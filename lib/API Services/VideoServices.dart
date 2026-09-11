@@ -2,8 +2,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
-import 'package:you_pirate_app/Screens/Home.dart';
-import 'package:flutter/material.dart';
 
 class VideoServices {
   static final String baseUrl = dotenv.env['BASE_URL'] ?? '';
@@ -66,12 +64,9 @@ class VideoServices {
       return true;
     } on DioException catch(e) {
       if(CancelToken.isCancel(e)) {
-        print("Download Canceled");
         return false;
       }
       if (e.response != null) {
-        print(e.response!.statusCode);
-        print(e.response!.data);
         if (e.response!.statusCode == 400) {
           throw e.response!.data;
         }
@@ -87,20 +82,6 @@ class VideoServices {
         'success': false,
         'message': "Unable to connect with Server"
       };
-
-     // if (e.response != null) {
-     //    print(e.response?.statusCode);
-     //    print(e.response?.data);
-     //    print(e.response?.data.runtimeType);
-     //    return true;
-     //  } else if(e.response!.statusCode == 400) {
-     //    throw jsonDecode(e.response!.data);
-     //  } else {
-     //    throw {
-     //      'success': false,
-     //      'message': "Unable to connect with Server"
-     //    };
-     //  }
     }
   }
 
@@ -113,8 +94,8 @@ class VideoServices {
     required void Function(int received, int total) onProgress
   }) async {
     final endPoint = isVideo ?
-    "${baseUrl}/user/video/qualitydownload" :
-    "${baseUrl}/user/audio/qualitydownload" ;
+    "$baseUrl/user/video/qualitydownload" :
+    "$baseUrl/user/audio/qualitydownload" ;
 
     final Dio dio = Dio();
 
@@ -136,12 +117,9 @@ class VideoServices {
       return true;
     } on DioException catch(e) {
       if(CancelToken.isCancel(e)) {
-        print("Download Canceled");
         return false;
       }
       if (e.response != null) {
-        print(e.response!.statusCode);
-        print(e.response!.data);
         if (e.response!.statusCode == 400) {
           throw e.response!.data;
         }
@@ -157,22 +135,6 @@ class VideoServices {
         'success': false,
         'message': "Unable to connect with Server"
       };
-      // if (e.response != null) {
-      //   print(e.response?.statusCode);
-      //   print(e.response?.data);
-      //   print(e.response?.data.runtimeType);
-      //   return true;
-      // } else if(CancelToken.isCancel(e)) {
-      //   print("Download Canceled");
-      //   return false;
-      // } else if(e.response!.statusCode == 400) {
-      //   throw jsonDecode(e.response!.data);
-      // } else  {
-      //   throw {
-      //     'success': false,
-      //     'message': "Unable to connect with Server"
-      //   };
-      // }
     }
   }
 }

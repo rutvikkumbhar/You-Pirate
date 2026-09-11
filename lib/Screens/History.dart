@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
@@ -13,6 +11,7 @@ import 'package:open_filex/open_filex.dart';
 import 'package:share_plus/share_plus.dart';
 
 class DownloadHistory extends StatefulWidget {
+  const DownloadHistory({super.key});
   @override
   State<DownloadHistory> createState() => _DownloadHistoryState();
 }
@@ -43,6 +42,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
       )
     );
   }
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xff111111),
@@ -82,7 +82,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
         builder: (builder, snapshot) {
           if(snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-                child: Lottie.asset("assets/Animations/stream_loading.json", height: 100));
+                child: Lottie.asset("assets/Animations/info_loading.json", height: 100));
           } else if(snapshot.hasError) {
             return Center(
               child: Text("Something went wrong",
@@ -301,38 +301,6 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     "Original URL", ""
                 ),
                 SizedBox(height: 5,),
-                // TextField(
-                //   readOnly: true ,
-                //   decoration: InputDecoration(
-                //     hintText: data['sourceUrl'],
-                //     hintStyle: GoogleFonts.poppins(
-                //       color: Colors.white70,
-                //       fontSize: 12
-                //     ),
-                //     filled: true,
-                //     enabled: true,
-                //     fillColor: Color(0xff111111),
-                //     contentPadding: EdgeInsets.symmetric(vertical: 5,horizontal: 10),
-                //     border: OutlineInputBorder(
-                //       borderRadius: BorderRadius.circular(16),
-                //       borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,),
-                //     ),
-                //     enabledBorder: OutlineInputBorder(
-                //         borderRadius: BorderRadius.circular(16),
-                //         borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
-                //     ),
-                //     focusedBorder: OutlineInputBorder(
-                //         borderRadius: BorderRadius.circular(16),
-                //         borderSide: BorderSide(color: Color(0xff503bd1).withValues(alpha: 0.3),width: 1.8,)
-                //     ),
-                //     suffixIcon: IconButton(
-                //       icon: Icon(Boxicons.bx_copy, color: Color(0xff503bd1),size: 21,),
-                //       onPressed: () {
-                //         Clipboard.setData(ClipboardData(text: data['sourceUrl'].toString()));
-                //       },
-                //     )
-                //   ),
-                // ),
                 Container(
                   height: 45, width: MediaQuery.of(context).size.width,
                   decoration: BoxDecoration(
@@ -379,10 +347,6 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     IconButton(
                       icon: Icon(Boxicons.bxs_trash, size: 23, color: Colors.red.withValues(alpha: 0.7),),
                       onPressed: () async {
-                        // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title'];
-                        // String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title'];
-                        // bool isVideo = data['mediaType'] == "video" ? true : false;
-                        // await shareMediaFile(context, data['filePath'] );
                         bool isDeleted = await deleteDownloadConfirmation(data['id'].toString(), true);
                         if(isDeleted) {
                           Navigator.pop(context, true);
@@ -392,10 +356,6 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     SizedBox(width: 15,),
                     GestureDetector(
                       onTap: () async {
-                        // String videoPath = "/storage/emulated/0/DCIM/You Pirate/"+data['title'];
-                        // String audioPath = "/storage/emulated/0/Music/You Pirate/"+data['title'];
-                        // bool isVideo = data['mediaType'] == "video" ? true : false;
-                        // print("OPEN MEDIA FILE PATH $audioPath");
                        await  openMediaFile(context, data['filePath'] );
                       },
                       child: Container(
@@ -462,9 +422,6 @@ class _DownloadHistoryState extends State<DownloadHistory> {
           child: Container(
               height: 75,width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
-                  // color: Color(0xff1B1B1B),
-                  // borderRadius: BorderRadius.circular(13),
-                  // border: Border.all(color: Color(0xff503bd1).withValues(alpha: 0.2),),
                 gradient: LinearGradient(
                     colors: [Color(0xff1B1B1B), Color(0xff111111)],
                     begin: Alignment.topCenter,
@@ -506,7 +463,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            Text("${data['extension'].toString().toUpperCase()}",
+                            Text(data['extension'].toString().toUpperCase(),
                               style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color: Color(0xff503bd1),

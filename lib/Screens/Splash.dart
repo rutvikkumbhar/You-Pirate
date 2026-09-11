@@ -1,12 +1,12 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:you_pirate_app/Screens/Home.dart';
 import 'package:you_pirate_app/Screens/Maintenance.dart';
+import 'package:you_pirate_app/Screens/Update.dart';
 
 class Splash extends StatefulWidget {
+  const Splash({super.key});
   @override
   State<Splash> createState() => _SplashState();
 }
@@ -18,10 +18,15 @@ class _SplashState extends State<Splash> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 1), () async{
-      final data = await reference.doc("maintenance").get();
-      if(data['on_maintenance']) {
+      final maintenanceData = await reference.doc("maintenance").get();
+      final updateData = await reference.doc("update").get();
+      if(maintenanceData['on_maintenance']) {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
           return Maintenance();
+        }));
+      } else if(updateData['is_update']) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
+          return Update(data: updateData);
         }));
       } else {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){

@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 
 class Maintenance extends StatelessWidget {
+  const Maintenance({super.key});
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
      backgroundColor: Color(0xff111111),
