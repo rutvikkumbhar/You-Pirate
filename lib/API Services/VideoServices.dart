@@ -68,10 +68,10 @@ class VideoServices {
       }
       if (e.response != null) {
         if (e.response!.statusCode == 400) {
-          throw e.response!.data;
+          throw jsonDecode(e.response!.data);
         }
         if(e.response!.statusCode == 500) {
-          throw e.response!.data;
+          throw jsonDecode(e.response!.data);
         }
         throw {
           'success': false,
@@ -121,10 +121,10 @@ class VideoServices {
       }
       if (e.response != null) {
         if (e.response!.statusCode == 400) {
-          throw e.response!.data;
+          throw jsonDecode(e.response!.data);
         }
         if(e.response!.statusCode == 500) {
-          throw e.response!.data;
+          throw jsonDecode(e.response!.data);
         }
         throw {
           'success': false,

@@ -19,8 +19,8 @@ class DatabaseHelper {
     final database = await openDatabase(
       dbPath,
       version: 1,
-      onCreate: (db, version) {
-        db.execute('''
+      onCreate: (db, version) async {
+        await db.execute('''
         CREATE TABLE download_history (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           title TEXT NOT NULL,

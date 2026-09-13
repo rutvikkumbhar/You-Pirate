@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:you_pirate_app/Screens/Home.dart';
 import 'package:you_pirate_app/Screens/Maintenance.dart';
 import 'package:you_pirate_app/Screens/Update.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
@@ -20,14 +21,24 @@ class _SplashState extends State<Splash> {
     Timer(const Duration(seconds: 1), () async{
       final maintenanceData = await reference.doc("maintenance").get();
       final updateData = await reference.doc("update").get();
-      if(maintenanceData['on_maintenance']) {
+      final info = await PackageInfo.fromPlatform();
+      if(false) {
+        // maintenanceData['on_maintenance']
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
           return Maintenance();
         }));
       } else if(updateData['is_update']) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
-          return Update(data: updateData);
-        }));
+        // updateData['is_update']
+        if(info.version != updateData['version']) {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
+            return Update(currentVersion: info.version, data: updateData);
+          }));
+        } else {
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
+            return Home();
+          }));
+        }
+
       } else {
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (builder){
           return Home();

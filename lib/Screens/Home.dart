@@ -5,6 +5,7 @@ import 'package:flutter_boxicons/flutter_boxicons.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 import 'package:you_pirate_app/API%20Services/VideoServices.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:you_pirate_app/Screens/History.dart';
@@ -13,6 +14,8 @@ import 'package:you_pirate_app/Services/SnackbarServices.dart';
 import 'package:you_pirate_app/Database/database_services.dart';
 import 'dart:async';
 import 'package:share_handler/share_handler.dart';
+
+import '../Database/database_helper.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -114,6 +117,24 @@ class _HomeState extends State<Home> {
                 fontSize: 24,
                 color: Colors.white),)),
           centerTitle: true,
+      leading: IconButton(
+        icon: Icon(Icons.warning_amber_rounded, color: Colors.redAccent,),
+        onPressed: () async {
+          final db = await DatabaseHelper.database;
+          final rows = await db.query("download_history");
+
+          if (!context.mounted) return;
+
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              content: Text(
+                "DB: ${db.path}\n\nRows: ${rows.length}\n\n$rows",
+              ),
+            ),
+          );
+        },
+      ),
       actions: [
         IconButton(
           icon: Icon(Icons.history,color: Colors.white70,),
@@ -414,20 +435,20 @@ class _HomeState extends State<Home> {
                                     resetValuesToDefault();
                                     return;
                                   }
-                                  debugPrint("Media downloaded");
-                                  debugPrint("Pushing file into Internal Storage");
-                                  String? displayTitle = await MediaStorePlusServices.pushVideoToInternal(
-                                    savePath,
-                                  );
-                                  setState(()=>isDownloading = false);
-
-                                  debugPrint("Stored into Internal Storage");
-                                  SnackbarServices().success(context, "Download Completed");
-                                  saveToDownloadHistory(displayTitle!,true, "bv*+ba/b").then((result){
-                                    resetValuesToDefault();
+                                  // new version of push file
+                                  pushFileToInternal(savePath, true).then((saveInfo){
+                                    if (saveInfo == null) {
+                                      throw Exception("MediaStore returned no save information");
+                                    }
+                                    saveToDownloadHistory(saveInfo.name, true, "bv*+ba/b").then((onValue){
+                                      setState(()=>isDownloading = false);
+                                      resetValuesToDefault();
+                                      SnackbarServices().success(context, "Download Completed");
+                                    }).onError((error, stackTrace){
+                                      SnackbarServices().error(context, "HISTORY: $error");
+                                    });
                                   }).onError((error, stackTrace){
-                                    resetValuesToDefault();
-                                    SnackbarServices().error(context, error.toString());
+                                    SnackbarServices().error(context, "INTERNAL: $error");
                                   });
                                 }).onError((error, stackTrace){
                                   resetValuesToDefault();
@@ -756,34 +777,51 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> saveToDownloadHistory  (String savedTitle, bool isVideo, String formatId) async {
-
+  Future<void> saveToDownloadHistory(
+      String savedTitle,
+      bool isVideo,
+      String formatId,
+      ) async {
     String filePath;
-    if(isVideo) {
+
+    if (isVideo) {
       filePath = "/storage/emulated/0/DCIM/You Pirate/$savedTitle";
     } else {
       filePath = "/storage/emulated/0/Music/You Pirate/$savedTitle";
     }
-    try {
-      await DatabaseServices().insertDownload({
-        'title': videoInfo?['title'].toString(),
-        'thumbnail': videoInfo?['thumbnail'].toString(),
-        'sourceUrl': urlController.text.toString(),
-        'platform': videoInfo?['extractor'].toString().toUpperCase(),
-        'mediaType': isVideo ? "video" : "audio",
-        'formatId': formatId,
-        'quality': quality,
-        'extension': extension,
-        'filePath': filePath,
-        'fileSize': double.parse(bytesToMb(totalBytes))>1024?"${(double.parse(bytesToMb(totalBytes))/1024).toStringAsFixed(2)} GB":"${bytesToMb(totalBytes)} MB",
-        'duration': videoInfo?['duration_string'].toString(),
-        'downloadDate': DateTime.now().toString(),
-        'status': 1,
-      }).onError((error, stackTrace){
-        throw error.toString();
-      });
-    } catch(error) {
+
+    await DatabaseServices().insertDownload({
+      'title': videoInfo?['title'].toString(),
+      'thumbnail': videoInfo?['thumbnail'].toString(),
+      'sourceUrl': urlController.text.toString(),
+      'platform': videoInfo?['extractor'].toString().toUpperCase(),
+      'mediaType': isVideo ? "video" : "audio",
+      'formatId': formatId,
+      'quality': quality,
+      'extension': isVideo ? "mp4" : "m4a",
+      'filePath': filePath,
+      'fileSize': double.parse(bytesToMb(totalBytes)) > 1024
+          ? "${(double.parse(bytesToMb(totalBytes)) / 1024).toStringAsFixed(2)} GB"
+          : "${bytesToMb(totalBytes)} MB",
+      'duration': videoInfo?['duration_string'].toString(),
+      'downloadDate': DateTime.now().toString(),
+      'status': 1,
+    }).onError((error, stackTrace){
       throw error.toString();
+    });
+  }
+
+  Future<SaveInfo?> pushFileToInternal(String savePath, bool isVideo) async {
+    if(isVideo) {
+      return await MediaStorePlusServices.pushVideoToInternal(savePath)
+          .onError((error, stackTrace) {
+            throw error.toString();
+          });
+    } else {
+      return await MediaStorePlusServices.pushAudioToInternal(savePath)
+          .onError((error, stackTrace) {
+            throw error.toString();
+          });
     }
   }
 
@@ -829,28 +867,34 @@ class _HomeState extends State<Home> {
                 setState((){});
               }
             }).then((result) async {
+              // download cancel
               if(!result) {
                 resetValuesToDefault();
                 return;
               }
-              String? displayTitle;
-              if(isVideo) {
-                displayTitle = await MediaStorePlusServices.pushVideoToInternal(savePath);
-              } else {
-                displayTitle = await MediaStorePlusServices.pushAudioToInternal(savePath);
-              }
-              setState(()=>isDownloading = false);
-              SnackbarServices().success(context, "Download Completed");
-              saveToDownloadHistory(displayTitle!, isVideo, formatID).then((result){
-                resetValuesToDefault();
-              }).onError((error, stackTrace){
-                resetValuesToDefault();
-                SnackbarServices().error(context, error.toString());
-              });
+              // store file to internal storage
+             pushFileToInternal(savePath, isVideo).then((saveInfo){
+               if (saveInfo == null) {
+                 throw Exception("MediaStore returned no save information");
+               }
+               // store to history
+               saveToDownloadHistory(saveInfo.name, isVideo, formatID).then((onValue){
+                 resetValuesToDefault();
+                 setState(()=>isDownloading = false);
+                 SnackbarServices().success(context, "Download Completed");
+               }).onError((error, stackTrace){
+                     SnackbarServices().error(context, "HISTORY: $error");
+               });
+             }).onError((error, stackTrace){
+               SnackbarServices().error(context, "INTERNAL: $error");
+             });
         }).onError((error, stackTrace){
           resetValuesToDefault();
           this.error = error as Map<String, dynamic>;
-          SnackbarServices().error(context, this.error!['message']);
+          SnackbarServices().error(
+              context,
+              this.error!['message'] ?? "Something went wrong"
+          );
           setState(()=>isDownloading = false);
         });
       } else {

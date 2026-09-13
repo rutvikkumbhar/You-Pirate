@@ -5,7 +5,8 @@ import 'Home.dart';
 
 class Update extends StatefulWidget {
   late DocumentSnapshot data;
-  Update({super.key, required this.data});
+  late String currentVersion;
+  Update({super.key, required this.currentVersion, required this.data});
   @override
   State<Update> createState() => _UpdateState();
 }
@@ -32,7 +33,7 @@ class _UpdateState extends State<Update> {
                 color: Colors.white
             ),),
             SizedBox(height: 8,),
-            Text("Version ${widget.data['version']}", style: GoogleFonts.poppins(
+            Text("Version ${widget.currentVersion} => ${widget.data['version']}", style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: Colors.white60

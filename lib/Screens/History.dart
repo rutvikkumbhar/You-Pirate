@@ -77,7 +77,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
           )
         ],
       ),
-      body: FutureBuilder(
+      body: FutureBuilder<List<Map<String, Object?>>>(
         future: DatabaseServices().getDownloads(),
         builder: (builder, snapshot) {
           if(snapshot.connectionState == ConnectionState.waiting) {
@@ -85,7 +85,8 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 child: Lottie.asset("assets/Animations/info_loading.json", height: 100));
           } else if(snapshot.hasError) {
             return Center(
-              child: Text("Something went wrong",
+              // "Something Went Wrong"
+              child: Text(snapshot.error.toString(),
               style: GoogleFonts.poppins(
                 fontSize: 13,
                 color: Colors.red,
@@ -115,7 +116,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
             return ListView.builder(
               itemCount: snapshot.data!.length,
               itemBuilder: (context, index){
-                final data = snapshot.data?[index] as Map<String, dynamic>;
+                final data = snapshot.data![index];
                 return downloadHistoryCard(data);
               },
             );
@@ -160,7 +161,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
     );
   }
 
-  Future<dynamic> mediaMetaDataDialog(Map<String, dynamic> data) {
+  Future<dynamic> mediaMetaDataDialog(Map<String, Object?> data) {
     return showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -179,7 +180,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
                         image: data['thumbnail']!= null
-                            ? NetworkImage(data['thumbnail'])
+                            ? NetworkImage(data['thumbnail'].toString())
                             : AssetImage("assets/images/no-thumbnail.png"),
                         fit: BoxFit.cover)
                   ),
@@ -193,7 +194,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 SizedBox(height: 20,),
                 metaDataRow(
                   Icon(Boxicons.bxl_youtube,color: Color(0xff503bd1),size: 20,),
-                  "Platform", data['platform']
+                  "Platform", data['platform'].toString()
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -215,7 +216,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 metaDataRow(
                     Icon(Boxicons.bxs_film,color: Color(0xff503bd1),size: 20,),
-                    "Quality", data['quality']
+                    "Quality", data['quality'].toString()
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -226,7 +227,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 metaDataRow(
                     Icon(Boxicons.bx_hash,color: Color(0xff503bd1),size: 20,),
-                    "Format ID", data['formatId']
+                    "Format ID", data['formatId'].toString()
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -248,7 +249,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 metaDataRow(
                     Icon(Boxicons.bx_time,color: Color(0xff503bd1),size: 20,),
-                    "Duration", data['duration'].toString().isNotEmpty ? data['duration'] : "NA"
+                    "Duration", data['duration'].toString().isNotEmpty ? data['duration'].toString() : "NA"
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -259,7 +260,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 metaDataRow(
                     Icon(Boxicons.bxs_data,color: Color(0xff503bd1),size: 20,),
-                    "File Size", data['fileSize']
+                    "File Size", data['fileSize'].toString()
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -270,7 +271,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 ),
                 metaDataRow(
                     Icon(Boxicons.bxs_calendar,color: Color(0xff503bd1),size: 20,),
-                    "Downloaded On", DateTime.parse(data['downloadDate'])
+                    "Downloaded On", DateTime.parse(data['downloadDate'].toString())
                     .toIso8601String()
                     .split('T')
                     .first
@@ -320,7 +321,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(left: 10),
-                          child: Text(data['sourceUrl'],
+                          child: Text(data['sourceUrl'].toString(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.poppins(
@@ -356,7 +357,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     SizedBox(width: 15,),
                     GestureDetector(
                       onTap: () async {
-                       await  openMediaFile(context, data['filePath'] );
+                       await  openMediaFile(context, data['filePath'].toString() );
                       },
                       child: Container(
                         height: 40,
@@ -379,7 +380,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                     SizedBox(width: 15,),
                     GestureDetector(
                       onTap: () async {
-                        await shareMediaFile(context, data['filePath'] );
+                        await shareMediaFile(context, data['filePath'].toString() );
                       },
                       child: Container(
                         height: 40,
@@ -409,7 +410,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
     );
   }
 
-  Widget downloadHistoryCard(Map<String, dynamic> data) {
+  Widget downloadHistoryCard(Map<String, Object?> data) {
     return GestureDetector(
       onTap: () async {
         bool isDeleted = await mediaMetaDataDialog(data) ?? false;
@@ -453,7 +454,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text((data['title'].toString().length) > 35 ? "${data['title'].toString().substring(0,35)}..." : data['title'],
+                        Text((data['title'].toString().length) > 35 ? "${data['title'].toString().substring(0,35)}..." : data['title'].toString(),
                           style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 15,
