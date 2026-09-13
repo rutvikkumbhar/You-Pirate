@@ -104,6 +104,7 @@ class _HomeState extends State<Home> {
     downloadSpeed = 0;
     remainingSeconds = 0;
     displayedSpeed = 0;
+    previousTime = DateTime.now();
     return;
   }
   @override
@@ -857,9 +858,9 @@ class _HomeState extends State<Home> {
                 progress = received / total;
                 // Download Speed
                 final now = DateTime.now();
-                final elapsed = now.difference(previousTime).inMilliseconds / 1000;
-                if (elapsed >= 1000) {
-                  final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                final elapsedMs = now.difference(previousTime).inMilliseconds;
+                if (elapsedMs >= 1000) {
+                  final currentSpeed = (received - previousReceived) / (elapsedMs / 1000);
                   displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
                   previousReceived = received;
                   previousTime = now;
