@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:you_pirate_app/Screens/History.dart';
 import 'package:you_pirate_app/Screens/Setting.dart';
 import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
+import 'package:you_pirate_app/Services/SettingServices.dart';
 import 'package:you_pirate_app/Services/SnackbarServices.dart';
 import 'package:you_pirate_app/Database/database_services.dart';
 import 'dart:async';
@@ -403,9 +404,12 @@ class _HomeState extends State<Home> {
                             extension = "mp4";
                             quality = "Best";
                             // show notification
-                            final downloadTitle = videoInfo?['title']?.toString() ?? "Video";
-                            await NotificationService.showDownloadStarted(title: downloadTitle);
-
+                            final notificationsEnabled = await SettingServices.isDownloadNotificationEnabled();
+                            if(notificationsEnabled) {
+                              await NotificationService.showDownloadStarted(
+                                  title: videoInfo?['title']?.toString() ?? "Video"
+                              );
+                            }
                             setState(() => fetchingStream = true);
                             Directory dir = await getApplicationDocumentsDirectory();
                             String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
@@ -424,13 +428,15 @@ class _HomeState extends State<Home> {
                                     totalBytes = total;
                                     progress = received / total;
                                     // update notification
-                                    final notificationProgress = (progress * 100).clamp(0, 100).toInt();
-                                    NotificationService.updateDownload(
-                                      title: videoInfo?['title']?.toString() ?? "Video",
-                                      progress: notificationProgress,
-                                      received: "${bytesToMb(receivedBytes)}MB",
-                                      total: "${bytesToMb(totalBytes)}MB",
-                                    );
+                                    if(notificationsEnabled) {
+                                      final notificationProgress = (progress * 100).clamp(0, 100).toInt();
+                                      NotificationService.updateDownload(
+                                        title: videoInfo?['title']?.toString() ?? "Video",
+                                        progress: notificationProgress,
+                                        received: "${bytesToMb(receivedBytes)}MB",
+                                        total: "${bytesToMb(totalBytes)}MB",
+                                      );
+                                    }
                                     // Download Speed
                                     final now = DateTime.now();
                                     final elapsedMs = now.difference(previousTime).inMilliseconds;
@@ -444,31 +450,48 @@ class _HomeState extends State<Home> {
                                   }
                                 }).then((result) async {
                                   if(!result) {
-                                    await NotificationService.cancelDownload();
+                                    if(notificationsEnabled) {
+                                      await NotificationService.cancelDownload();
+                                    }
                                     resetValuesToDefault();
                                     return;
                                   }
                                   // new version of push file
-                                  pushFileToInternal(savePath, true).then((saveInfo){
+                                  pushFileToInternal(savePath, true).then((saveInfo) async {
                                     if (saveInfo == null) {
                                       throw Exception("MediaStore returned no save information");
                                     }
-                                    saveToDownloadHistory(saveInfo.name, true, "bv*+ba/b").then((onValue) async {
-                                      // download complete notification
-                                      final filePath = isVideo
-                                          ? "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}"
-                                          : "/storage/emulated/0/Music/You Pirate/${saveInfo.name}";
+                                    final filePath = "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}";
+                                    final incognito = await SettingServices.isIncognitoDownload();
+                                    // save to history
+                                    if(!incognito) {
+                                      try {
+                                        await saveToDownloadHistory(
+                                            savedTitle: saveInfo.name,
+                                            isVideo: true,
+                                            formatId: "bv*+ba/b",
+                                            status: 1
+                                        );
+                                      } catch(error) {
+                                        SnackbarServices().error(context, "HISTORY: $error",);
+                                      }
+                                    }
+                                    // completion notification
+                                    if(notificationsEnabled) {
+                                      try {
+                                        await NotificationService.showDownloadCompleted(
+                                          title: videoInfo?['title']?.toString() ?? "Download",
+                                          filePath: filePath,
+                                        );
+                                      } catch(error) {
+                                        // SnackbarServices().error(context, "Notification: $error",);
+                                        print("Notification error: $error");
+                                      }
+                                    }
 
-                                      await NotificationService.showDownloadCompleted(
-                                        title: videoInfo?['title']?.toString() ?? "Download",
-                                        filePath: filePath,
-                                      );
-                                      setState(()=>isDownloading = false);
-                                      resetValuesToDefault();
-                                      SnackbarServices().success(context, "Download Completed");
-                                    }).onError((error, stackTrace){
-                                      SnackbarServices().error(context, "HISTORY: $error");
-                                    });
+                                    resetValuesToDefault();
+                                    setState(()=>isDownloading = false);
+                                    SnackbarServices().success(context, "Download Completed");
                                   }).onError((error, stackTrace){
                                     SnackbarServices().error(context, "INTERNAL: $error");
                                   });
@@ -799,11 +822,12 @@ class _HomeState extends State<Home> {
     }
   }
 
-  Future<void> saveToDownloadHistory(
-      String savedTitle,
-      bool isVideo,
-      String formatId,
-      ) async {
+  Future<void> saveToDownloadHistory({
+    required String savedTitle,
+    required bool isVideo,
+    required String formatId,
+    required int status
+}) async {
     String filePath;
 
     if (isVideo) {
@@ -827,7 +851,7 @@ class _HomeState extends State<Home> {
           : "${bytesToMb(totalBytes)} MB",
       'duration': videoInfo?['duration_string'].toString(),
       'downloadDate': DateTime.now().toString(),
-      'status': 1,
+      'status': status,
     }).onError((error, stackTrace){
       throw error.toString();
     });
@@ -859,9 +883,12 @@ class _HomeState extends State<Home> {
         extension = isVideo ? "mp4" : "m4a";
         this.quality = quality;
         // show notification
-        final downloadTitle = videoInfo?['title']?.toString() ?? "Video";
-        await NotificationService.showDownloadStarted(title: downloadTitle);
-
+        final notificationsEnabled = await SettingServices.isDownloadNotificationEnabled();
+        if(notificationsEnabled) {
+          await NotificationService.showDownloadStarted(
+              title: videoInfo?['title']?.toString() ?? "Video"
+          );
+        }
         setState(() => fetchingStream = true);
         Directory dir = await getApplicationDocumentsDirectory();
         String savePath = "${dir.path}/${videoInfo?['title']}.$extension";
@@ -882,13 +909,15 @@ class _HomeState extends State<Home> {
                 totalBytes = total;
                 progress = received / total;
                 // update notification
-                final notificationProgress = (progress * 100).clamp(0, 100).toInt();
-                NotificationService.updateDownload(
-                  title: videoInfo?['title']?.toString() ?? "Video",
-                  progress: notificationProgress,
-                  received: "${bytesToMb(receivedBytes)}MB",
-                  total: "${bytesToMb(totalBytes)}MB",
-                );
+                if(notificationsEnabled) {
+                  final notificationProgress = (progress * 100).clamp(0, 100).toInt();
+                  NotificationService.updateDownload(
+                    title: videoInfo?['title']?.toString() ?? "Video",
+                    progress: notificationProgress,
+                    received: "${bytesToMb(receivedBytes)}MB",
+                    total: "${bytesToMb(totalBytes)}MB",
+                  );
+                }
                 // Download Speed
                 final now = DateTime.now();
                 final elapsedMs = now.difference(previousTime).inMilliseconds;
@@ -903,38 +932,55 @@ class _HomeState extends State<Home> {
             }).then((result) async {
               // download cancel
               if(!result) {
-                await NotificationService.cancelDownload();
+                if(notificationsEnabled) {
+                  await NotificationService.cancelDownload();
+                }
                 resetValuesToDefault();
                 return;
               }
               // store file to internal storage
-             pushFileToInternal(savePath, isVideo).then((saveInfo){
+             pushFileToInternal(savePath, isVideo).then((saveInfo) async {
                if (saveInfo == null) {
                  throw Exception("MediaStore returned no save information");
                }
-               // store to history
-               saveToDownloadHistory(saveInfo.name, isVideo, formatID).then((onValue) async {
-                 // download complete notification
-                 final filePath = isVideo
-                     ? "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}"
-                     : "/storage/emulated/0/Music/You Pirate/${saveInfo.name}";
+               final filePath = isVideo
+                   ? "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}"
+                   : "/storage/emulated/0/Music/You Pirate/${saveInfo.name}";
 
-                 await NotificationService.showDownloadCompleted(
-                   title: videoInfo?['title']?.toString() ?? "Download",
-                   filePath: filePath,
-                 );
+               final incognito = await SettingServices.isIncognitoDownload();
+               if(!incognito) {
+                 try {
+                   await saveToDownloadHistory(
+                       savedTitle: saveInfo.name,
+                       isVideo: isVideo,
+                       formatId: formatID,
+                       status: 1
+                   );
+                 } catch(error) {
+                   SnackbarServices().error(context, "HISTORY: $error",);
+                 }
+               }
+               if(notificationsEnabled) {
+                 try {
+                   await NotificationService.showDownloadCompleted(
+                     title: videoInfo?['title']?.toString() ?? "Download",
+                     filePath: filePath,
+                   );
+                 } catch(error) {
+                   // SnackbarServices().error(context, "Notification: $error",);
+                   print("Notification error: $error");
+                 }
+               }
 
-                 resetValuesToDefault();
-                 setState(()=>isDownloading = false);
-                 SnackbarServices().success(context, "Download Completed");
-               }).onError((error, stackTrace){
-                     SnackbarServices().error(context, "HISTORY: $error");
-               });
+               resetValuesToDefault();
+               setState(()=>isDownloading = false);
+               SnackbarServices().success(context, "Download Completed");
              }).onError((error, stackTrace){
                SnackbarServices().error(context, "INTERNAL: $error");
              });
         }).onError((error, stackTrace){
           resetValuesToDefault();
+          print(error.toString());
           this.error = error as Map<String, dynamic>;
           SnackbarServices().error(
               context,

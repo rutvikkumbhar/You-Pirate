@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_boxicons/flutter_boxicons.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:you_pirate_app/Services/SettingServices.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -9,6 +11,22 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
+
+  bool incognitoDownload = false;
+  bool downloadNotification = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadSettings();
+
+  }
+  
+  Future<void> loadSettings() async {
+    incognitoDownload = await SettingServices.isIncognitoDownload();
+    downloadNotification = await SettingServices.isDownloadNotificationEnabled();
+    setState((){});
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,7 +74,7 @@ class _SettingState extends State<Setting> {
                           color: Colors.white
                       ),),
                       SizedBox(height: 3,),
-                      Text("Don't save downloaded files to your download history.",
+                      Text("Don't save downloaded files to your download history",
                         style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -66,13 +84,71 @@ class _SettingState extends State<Setting> {
                   ),
                 ),
                 Switch(
-                    value: true,
-                    onChanged: (value) {
-
+                    value: incognitoDownload,
+                    activeThumbColor: Color(0xff503bd1),
+                    activeTrackColor: Color(0xff503bd1).withValues(alpha: 0.2),
+                    inactiveThumbColor: Color(0xff503bd1),
+                    inactiveTrackColor: Color(0xFF2C2C2C),
+                    trackOutlineColor: WidgetStatePropertyAll(Colors.transparent),
+                    onChanged: (value) async {
+                      await SettingServices.setIncognitoDownload(value);
+                      setState(() {
+                        incognitoDownload = value;
+                      });
                     }
                 )
               ],
-            )
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              child: Container(
+                height: 0.1,
+                width: MediaQuery.of(context).size.width,
+                color: Colors.grey,
+              ),
+            ),Row(
+              children: [
+                SizedBox(width: 2,),
+                Icon( downloadNotification ? Boxicons.bxs_bell : Boxicons.bxs_bell_off,
+                  color: Colors.white,size: 22,),
+                SizedBox(width: 17,),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Download Notifications", style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white
+                      ),),
+                      SizedBox(height: 3,),
+                      Text("Show download progress and completion notification",
+                        style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white60
+                        ),),
+                    ],
+                  ),
+                ),
+                Switch(
+                    value: downloadNotification,
+                    activeThumbColor: Color(0xff503bd1),
+                    activeTrackColor: Color(0xff503bd1).withValues(alpha: 0.2),
+                    inactiveThumbColor: Color(0xff503bd1),
+                    inactiveTrackColor: Color(0xFF2C2C2C),
+                    trackOutlineColor: WidgetStatePropertyAll(Colors.transparent),
+                    onChanged: (value) async {
+                      await SettingServices.setDownloadNotification(value);
+                      setState(() {
+                        downloadNotification = value;
+                      });
+                    }
+                )
+              ],
+            ),
+
           ],
         ),
       ),
