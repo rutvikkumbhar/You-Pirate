@@ -169,7 +169,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
           backgroundColor: Color(0xff1B1B1B),
           insetPadding: EdgeInsets.all(20),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(15),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -286,9 +286,9 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 metaDataRow(
                     Icon(Boxicons.bxs_folder,color: Color(0xff503bd1),size: 20,),
                     "Saved Location",
-                    data['mediaType'] == "video"
+                   data['status']==1 ? (data['mediaType'] == "video"
                         ? "/storage/emulated/0/DCIM/You Pirate/"
-                        : "/storage/emulated/0/Music/You Pirate/"
+                        : "/storage/emulated/0/Music/You Pirate/") : "Canceled"
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
@@ -421,7 +421,7 @@ class _DownloadHistoryState extends State<DownloadHistory> {
       child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12,vertical: 5),
           child: Container(
-              height: 75,width: MediaQuery.of(context).size.width,
+              width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                     colors: [Color(0xff1B1B1B), Color(0xff111111)],
@@ -435,73 +435,89 @@ class _DownloadHistoryState extends State<DownloadHistory> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      height: 45,width: 45,
+                      height: 44,width: 44,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xff503bd1).withValues(alpha: 0.7),
+                        color: Color(0xff503bd1).withValues(alpha: 0.1),
                       ),
                       child: Center(
                           child: data['mediaType']=="video"
-                              ? Icon(Boxicons.bxs_video, size: 23,color: Colors.white70,)
-                              : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Colors.white70,)
+                              ? Icon(Boxicons.bxs_video, size: 23,color: Color(0xff503bd1),)
+                              : FaIcon(FontAwesomeIcons.itunesNote,size: 20,color: Color(0xff503bd1),)
                       ),
                     ),
                     SizedBox(width: 15,),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text((data['title'].toString().length) > 35 ? "${data['title'].toString().substring(0,35)}..." : data['title'].toString(),
-                          style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(data['title'].toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500
+                            ),
                           ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Text(data['extension'].toString().toUpperCase(),
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Color(0xff503bd1),
-                                  fontWeight: FontWeight.w500
-                              ),),
-                            SizedBox(width: 11,),
-                            Text("•",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500
-                              ),),
-                            SizedBox(width: 11,),
-                            Text("${data['quality']}",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500
-                              ),),
-                            SizedBox(width: 11,),
-                            Text("•",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500
-                              ),),
-                            SizedBox(width: 11,),
-                            Text("${data['fileSize']}",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Colors.white70,
-                                  fontWeight: FontWeight.w500
-                              ),),
-                          ],
-                        )
-                      ],
-                    )
+                          SizedBox(height: 5,),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(data['extension'].toString().toUpperCase(),
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        color: Colors.white60,
+                                        fontWeight: FontWeight.w500
+                                    ),),
+                                  SizedBox(width: 11,),
+                                  Text("•",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        color: Colors.white30,
+                                        fontWeight: FontWeight.w500
+                                    ),),
+                                  SizedBox(width: 11,),
+                                  Text("${data['quality']}",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        color: Colors.white60,
+                                        fontWeight: FontWeight.w500
+                                    ),),
+                                  SizedBox(width: 11,),
+                                  Text("•",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        color: Colors.white30,
+                                        fontWeight: FontWeight.w500
+                                    ),),
+                                  SizedBox(width: 11,),
+                                  Text("${data['fileSize']}",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 13,
+                                        color: Colors.white60,
+                                        fontWeight: FontWeight.w500
+                                    ),),
+                                ],
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 12,),
+                    if(data['status']==1)
+                      Icon(Icons.done, color: Color(0xff503bd1),size: 21,)
+                    else
+                      Icon(Boxicons.bx_x,color: Colors.red.withValues(alpha: 0.5),size: 24,)
                   ],
                 ),
               )

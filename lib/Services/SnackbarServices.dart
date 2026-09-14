@@ -14,7 +14,7 @@ class SnackbarServices {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        duration: Duration(seconds: 8),
+        duration: Duration(seconds: 7),
       ),
     );
   }

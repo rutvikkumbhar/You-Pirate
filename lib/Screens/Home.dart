@@ -370,9 +370,6 @@ class _HomeState extends State<Home> {
                                       SnackbarServices().warning(context, "Wait Until Media Process!");
                                     } else {
                                       downloadCancelToken!.cancel("User Canceled Download");
-                                      resetValuesToDefault();
-                                      setState(()=> isDownloading = false);
-                                      SnackbarServices().warning(context, "Download Canceled");
                                     }
                                   },
                                   child: Container(
@@ -449,11 +446,26 @@ class _HomeState extends State<Home> {
                                     setState((){});
                                   }
                                 }).then((result) async {
+                                  final incognito = await SettingServices.isIncognitoDownload();
                                   if(!result) {
                                     if(notificationsEnabled) {
                                       await NotificationService.cancelDownload();
                                     }
+                                    if(!incognito){
+                                      try {
+                                        await saveToDownloadHistory(
+                                            savedTitle: videoInfo?['title']?.toString() ?? "Video",
+                                            isVideo: true,
+                                            formatId: "bv*+ba/b",
+                                            status: 0
+                                        );
+                                      } catch(error) {
+                                        SnackbarServices().error(context, "HISTORY: $error",);
+                                      }
+                                    }
                                     resetValuesToDefault();
+                                    setState(()=> isDownloading = false);
+                                    SnackbarServices().warning(context, "Download Canceled");
                                     return;
                                   }
                                   // new version of push file
@@ -462,7 +474,6 @@ class _HomeState extends State<Home> {
                                       throw Exception("MediaStore returned no save information");
                                     }
                                     final filePath = "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}";
-                                    final incognito = await SettingServices.isIncognitoDownload();
                                     // save to history
                                     if(!incognito) {
                                       try {
@@ -845,7 +856,7 @@ class _HomeState extends State<Home> {
       'formatId': formatId,
       'quality': quality,
       'extension': isVideo ? "mp4" : "m4a",
-      'filePath': filePath,
+      'filePath': status==1 ? filePath : "Download Canceled",
       'fileSize': double.parse(bytesToMb(totalBytes)) > 1024
           ? "${(double.parse(bytesToMb(totalBytes)) / 1024).toStringAsFixed(2)} GB"
           : "${bytesToMb(totalBytes)} MB",
@@ -876,7 +887,6 @@ class _HomeState extends State<Home> {
     required String formatID,
     required bool isVideo,
     required String quality,
-    required CancelToken downloadCancelToken,
   }) async {
     if(!isDownloading) {
         isDownloading = true;
@@ -898,7 +908,7 @@ class _HomeState extends State<Home> {
             formatId: formatID,
             savePath: savePath,
             isVideo: isVideo,
-            downloadCancelToken: downloadCancelToken,
+            downloadCancelToken: downloadCancelToken!,
             onProgress: (received, total) {
               if(fetchingStream) {
                 setState(() => fetchingStream = false);
@@ -930,12 +940,27 @@ class _HomeState extends State<Home> {
                 setState((){});
               }
             }).then((result) async {
+              final incognito = await SettingServices.isIncognitoDownload();
               // download cancel
               if(!result) {
                 if(notificationsEnabled) {
                   await NotificationService.cancelDownload();
                 }
+                if(!incognito){
+                  try {
+                    await saveToDownloadHistory(
+                        savedTitle: videoInfo?['title']?.toString() ?? "Video",
+                        isVideo: isVideo,
+                        formatId: formatID,
+                        status: 0
+                    );
+                  } catch(error) {
+                    SnackbarServices().error(context, "HISTORY: $error",);
+                  }
+                }
                 resetValuesToDefault();
+                setState(()=> isDownloading = false);
+                SnackbarServices().warning(context, "Download Canceled");
                 return;
               }
               // store file to internal storage
@@ -947,7 +972,6 @@ class _HomeState extends State<Home> {
                    ? "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}"
                    : "/storage/emulated/0/Music/You Pirate/${saveInfo.name}";
 
-               final incognito = await SettingServices.isIncognitoDownload();
                if(!incognito) {
                  try {
                    await saveToDownloadHistory(
@@ -1115,7 +1139,6 @@ class _HomeState extends State<Home> {
                             url: urlController.text.toString(),
                             formatID: data?['format_id'],
                             isVideo: isVideo,
-                            downloadCancelToken: downloadCancelToken,
                             quality: isVideo
                                 ? "${data?['resolution'].toString().split("x")[1] ?? "NA"}p"
                                 : "${data?['format_note'] ?? "NA"}");
