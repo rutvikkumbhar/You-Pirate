@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:you_pirate_app/Screens/Splash.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:media_store_plus/media_store_plus.dart';
+import 'package:you_pirate_app/Services/NotificationService.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -10,9 +11,11 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await dotenv.load(fileName: ".env");
+  await NotificationService.initialize();
   await MediaStore.ensureInitialized();
   MediaStore.appFolder = "You Pirate";
+  await dotenv.load(fileName: ".env");
+
   runApp(MyApp());
 }
 

@@ -9,13 +9,13 @@ import 'package:media_store_plus/media_store_plus.dart';
 import 'package:you_pirate_app/API%20Services/VideoServices.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:you_pirate_app/Screens/History.dart';
+import 'package:you_pirate_app/Screens/Setting.dart';
 import 'package:you_pirate_app/Services/MediaStorePlusServices.dart';
 import 'package:you_pirate_app/Services/SnackbarServices.dart';
 import 'package:you_pirate_app/Database/database_services.dart';
 import 'dart:async';
 import 'package:share_handler/share_handler.dart';
-
-import '../Database/database_helper.dart';
+import '../Services/NotificationService.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -118,24 +118,6 @@ class _HomeState extends State<Home> {
                 fontSize: 24,
                 color: Colors.white),)),
           centerTitle: true,
-      leading: IconButton(
-        icon: Icon(Icons.warning_amber_rounded, color: Colors.redAccent,),
-        onPressed: () async {
-          final db = await DatabaseHelper.database;
-          final rows = await db.query("download_history");
-
-          if (!context.mounted) return;
-
-          showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-              content: Text(
-                "DB: ${db.path}\n\nRows: ${rows.length}\n\n$rows",
-              ),
-            ),
-          );
-        },
-      ),
       actions: [
         IconButton(
           icon: Icon(Icons.history,color: Colors.white70,),
@@ -155,6 +137,23 @@ class _HomeState extends State<Home> {
           },
         ),
       ],
+      leading: IconButton(
+        icon: Icon(Icons.settings_rounded,color: Colors.white70,),
+        onPressed: () {
+          Navigator.of(context).push(
+            PageRouteBuilder(
+              pageBuilder: (_, _, _) => Setting(),
+              transitionsBuilder: (_, animation, _, child) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
+            ),
+          );
+          urlInputFocus.unfocus();
+        },
+      ),
       backgroundColor: Color(0xff111111),),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 13),
@@ -403,6 +402,10 @@ class _HomeState extends State<Home> {
                             isDownloading = true;
                             extension = "mp4";
                             quality = "Best";
+                            // show notification
+                            final downloadTitle = videoInfo?['title']?.toString() ?? "Video";
+                            await NotificationService.showDownloadStarted(title: downloadTitle);
+
                             setState(() => fetchingStream = true);
                             Directory dir = await getApplicationDocumentsDirectory();
                             String savePath = "${dir.path}/${videoInfo?['title']}.mp4";
@@ -415,16 +418,24 @@ class _HomeState extends State<Home> {
                                   if(fetchingStream) {
                                     setState(() => fetchingStream = false);
                                   }
-                                  if (total != -1) {
+                                  if(total != -1) {
                                     // Progress bar
-                                    progress = received / total;
-                                    totalBytes = total;
                                     receivedBytes = received;
+                                    totalBytes = total;
+                                    progress = received / total;
+                                    // update notification
+                                    final notificationProgress = (progress * 100).clamp(0, 100).toInt();
+                                    NotificationService.updateDownload(
+                                      title: videoInfo?['title']?.toString() ?? "Video",
+                                      progress: notificationProgress,
+                                      received: "${bytesToMb(receivedBytes)}MB",
+                                      total: "${bytesToMb(totalBytes)}MB",
+                                    );
                                     // Download Speed
                                     final now = DateTime.now();
-                                    final elapsed = now.difference(previousTime).inMilliseconds / 1000;
-                                    if (elapsed >= 1000) {
-                                      final currentSpeed = (received - previousReceived) / (elapsed / 1000);
+                                    final elapsedMs = now.difference(previousTime).inMilliseconds;
+                                    if (elapsedMs >= 1000) {
+                                      final currentSpeed = (received - previousReceived) / (elapsedMs / 1000);
                                       displayedSpeed = displayedSpeed * 0.8 + currentSpeed * 0.2;
                                       previousReceived = received;
                                       previousTime = now;
@@ -433,6 +444,7 @@ class _HomeState extends State<Home> {
                                   }
                                 }).then((result) async {
                                   if(!result) {
+                                    await NotificationService.cancelDownload();
                                     resetValuesToDefault();
                                     return;
                                   }
@@ -441,7 +453,16 @@ class _HomeState extends State<Home> {
                                     if (saveInfo == null) {
                                       throw Exception("MediaStore returned no save information");
                                     }
-                                    saveToDownloadHistory(saveInfo.name, true, "bv*+ba/b").then((onValue){
+                                    saveToDownloadHistory(saveInfo.name, true, "bv*+ba/b").then((onValue) async {
+                                      // download complete notification
+                                      final filePath = isVideo
+                                          ? "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}"
+                                          : "/storage/emulated/0/Music/You Pirate/${saveInfo.name}";
+
+                                      await NotificationService.showDownloadCompleted(
+                                        title: videoInfo?['title']?.toString() ?? "Download",
+                                        filePath: filePath,
+                                      );
                                       setState(()=>isDownloading = false);
                                       resetValuesToDefault();
                                       SnackbarServices().success(context, "Download Completed");
@@ -837,6 +858,10 @@ class _HomeState extends State<Home> {
         isDownloading = true;
         extension = isVideo ? "mp4" : "m4a";
         this.quality = quality;
+        // show notification
+        final downloadTitle = videoInfo?['title']?.toString() ?? "Video";
+        await NotificationService.showDownloadStarted(title: downloadTitle);
+
         setState(() => fetchingStream = true);
         Directory dir = await getApplicationDocumentsDirectory();
         String savePath = "${dir.path}/${videoInfo?['title']}.$extension";
@@ -856,6 +881,14 @@ class _HomeState extends State<Home> {
                 receivedBytes = received;
                 totalBytes = total;
                 progress = received / total;
+                // update notification
+                final notificationProgress = (progress * 100).clamp(0, 100).toInt();
+                NotificationService.updateDownload(
+                  title: videoInfo?['title']?.toString() ?? "Video",
+                  progress: notificationProgress,
+                  received: "${bytesToMb(receivedBytes)}MB",
+                  total: "${bytesToMb(totalBytes)}MB",
+                );
                 // Download Speed
                 final now = DateTime.now();
                 final elapsedMs = now.difference(previousTime).inMilliseconds;
@@ -870,6 +903,7 @@ class _HomeState extends State<Home> {
             }).then((result) async {
               // download cancel
               if(!result) {
+                await NotificationService.cancelDownload();
                 resetValuesToDefault();
                 return;
               }
@@ -879,7 +913,17 @@ class _HomeState extends State<Home> {
                  throw Exception("MediaStore returned no save information");
                }
                // store to history
-               saveToDownloadHistory(saveInfo.name, isVideo, formatID).then((onValue){
+               saveToDownloadHistory(saveInfo.name, isVideo, formatID).then((onValue) async {
+                 // download complete notification
+                 final filePath = isVideo
+                     ? "/storage/emulated/0/DCIM/You Pirate/${saveInfo.name}"
+                     : "/storage/emulated/0/Music/You Pirate/${saveInfo.name}";
+
+                 await NotificationService.showDownloadCompleted(
+                   title: videoInfo?['title']?.toString() ?? "Download",
+                   filePath: filePath,
+                 );
+
                  resetValuesToDefault();
                  setState(()=>isDownloading = false);
                  SnackbarServices().success(context, "Download Completed");
